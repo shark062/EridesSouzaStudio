@@ -302,33 +302,23 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
-        user_type = data.get('userType', 'client')
 
-        print(f"Tentativa de login: user_type={user_type}, username={username}")
-        
-        if user_type == 'admin':
-            print(f"Verificando credenciais admin: {username} == {admin_credentials['username']}")
-            print(f"Senha: {password} == {admin_credentials['password']}")
-            
-            if username == admin_credentials['username'] and password == admin_credentials['password']:
-                session['user'] = {
-                    'id': 'admin',
-                    'name': username,
-                    'type': 'admin'
-                }
-                print("Login admin bem-sucedido")
-                return jsonify({'success': True, 'redirect': '/admin'})
-            else:
-                print("Credenciais admin inválidas")
-                return jsonify({'success': False, 'message': 'Credenciais administrativas inválidas'})
+        # Primeiro verifica se é o administrador (credenciais fixas)
+        if username == admin_credentials['username'] and password == admin_credentials['password']:
+            session['user'] = {
+                'id': 'admin',
+                'name': username,
+                'type': 'admin'
+            }
+            return jsonify({'success': True, 'redirect': '/admin'})
 
-        # Login de cliente
+        # Se não for admin, verifica usuários clientes
         user = users_db.get(username)
         if user and user['password'] == password:
             session['user'] = user
             return jsonify({'success': True, 'redirect': '/dashboard'})
-        else:
-            return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'})
+        
+        return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'})
 
     return render_template('login.html')
 
