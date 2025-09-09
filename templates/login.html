@@ -16,12 +16,26 @@
         
         <div class="form-group">
             <label for="password">Senha:</label>
-            <input type="password" id="password" class="form-control" required>
+            <div style="position: relative;">
+                <input type="password" id="password" class="form-control" required>
+                <div style="margin-top: 8px;">
+                    <label style="font-size: 14px; font-weight: normal; color: rgba(255,215,0,0.8); cursor: pointer;">
+                        <input type="checkbox" id="showPassword" style="margin-right: 8px;">
+                        👁️ Mostrar senha
+                    </label>
+                </div>
+            </div>
         </div>
         
         <div class="form-group text-center">
             <button type="submit" class="btn">Entrar</button>
             <a href="/register" class="btn btn-secondary" style="margin-left: 10px;">Cadastrar</a>
+        </div>
+        
+        <div class="text-center" style="margin-top: 15px;">
+            <a href="/forgot-password" style="color: #FFD700; font-size: 14px; text-decoration: underline;">
+                🔑 Esqueceu sua senha?
+            </a>
         </div>
     </form>
     
@@ -39,6 +53,29 @@
 
 {% block scripts %}
 <script>
+// Garantir que o checkbox sempre inicie desmarcado
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('showPassword').checked = false;
+});
+
+// Toggle para mostrar/ocultar senha
+document.getElementById('showPassword').addEventListener('change', function() {
+    const passwordField = document.getElementById('password');
+    const showPasswordLabel = this.parentElement;
+    
+    if (this.checked) {
+        passwordField.type = 'text';
+        showPasswordLabel.innerHTML = '<input type="checkbox" id="showPassword" style="margin-right: 8px;" checked> 🙈 Ocultar senha';
+        // Reativar o event listener
+        document.getElementById('showPassword').addEventListener('change', arguments.callee);
+    } else {
+        passwordField.type = 'password';
+        showPasswordLabel.innerHTML = '<input type="checkbox" id="showPassword" style="margin-right: 8px;"> 👁️ Mostrar senha';
+        // Reativar o event listener
+        document.getElementById('showPassword').addEventListener('change', arguments.callee);
+    }
+});
+
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     

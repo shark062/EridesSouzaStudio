@@ -585,6 +585,95 @@ def api_user_update_profile():
     
     return jsonify({'success': True, 'message': 'Perfil atualizado com sucesso'})
 
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        data = request.get_json()
+        email = data.get('email')
+        
+        # Procura usuário pelo email
+        user_found = None
+        for username, user in users_db.items():
+            if user.get('email') == email:
+                user_found = user
+                break
+        
+        if not user_found:
+            return jsonify({'success': False, 'message': 'Email não encontrado'})
+        
+        # Gera token de recuperação (em produção, usar biblioteca como itsdangerous)
+        import secrets
+        reset_token = secrets.token_urlsafe(32)
+        
+        # Salva o token temporariamente (em produção, usar banco de dados com expiração)
+        if not hasattr(app, 'reset_tokens'):
+            app.reset_tokens = {}
+        
+        app.reset_tokens[reset_token] = {
+            'username': user_found['username'], 
+            'email': email,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        # Simula envio de email (em produção, usar serviço real de email)
+        reset_link = f"/reset-password?token={reset_token}"
+        
+        # Log para demonstração (em produção, enviar email real)
+        print(f"SIMULAÇÃO DE EMAIL ENVIADO:")
+        print(f"Para: {email}")
+        print(f"Assunto: Recuperação de Senha - Salon Beleza Dourada")
+        print(f"Link de recuperação: {reset_link}")
+        print(f"Token: {reset_token}")
+        
+        return jsonify({'success': True, 'message': 'Instruções enviadas por email'})
+    
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'GET':
+        token = request.args.get('token')
+        if not token or not hasattr(app, 'reset_tokens') or token not in app.reset_tokens:
+            return redirect(url_for('login'))
+        
+        # Verifica se o token não expirou (24 horas)
+        token_data = app.reset_tokens[token]
+        created_at = datetime.fromisoformat(token_data['created_at'])
+        if datetime.now() - created_at > timedelta(hours=24):
+            del app.reset_tokens[token]
+            return redirect(url_for('login'))
+        
+        return render_template('reset_password.html', token=token)
+    
+    if request.method == 'POST':
+        data = request.get_json()
+        token = data.get('token')
+        new_password = data.get('new_password')
+        
+        if not token or not hasattr(app, 'reset_tokens') or token not in app.reset_tokens:
+            return jsonify({'success': False, 'message': 'Token inválido ou expirado'})
+        
+        token_data = app.reset_tokens[token]
+        username = token_data['username']
+        
+        # Verifica se o token não expirou
+        created_at = datetime.fromisoformat(token_data['created_at'])
+        if datetime.now() - created_at > timedelta(hours=24):
+            del app.reset_tokens[token]
+            return jsonify({'success': False, 'message': 'Token expirado'})
+        
+        # Atualiza a senha do usuário
+        if username in users_db:
+            users_db[username]['password'] = new_password
+            save_data()
+            
+            # Remove o token usado
+            del app.reset_tokens[token]
+            
+            return jsonify({'success': True, 'message': 'Senha redefinida com sucesso'})
+        else:
+            return jsonify({'success': False, 'message': 'Usuário não encontrado'})
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
