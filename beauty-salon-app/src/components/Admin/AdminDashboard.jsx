@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
@@ -10,9 +11,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
-  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [services, setServices] = useState([]);
   const [showModal, setShowModal] = useState(null);
   const [formData, setFormData] = useState({});
+  const [selectedService, setSelectedService] = useState(null);
+  const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null);
   const [stats, setStats] = useState({
     todayBookings: 0,
     todayRevenue: 0,
@@ -24,6 +27,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     loadData();
+    loadServices();
   }, []);
 
   const loadData = () => {
@@ -33,17 +37,56 @@ const AdminDashboard = () => {
 
     // Carregar clientes
     const allClients = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    setClients(allClients);
+    setClients(allClients.filter(user => user.role !== 'admin'));
 
     // Calcular estatísticas
     calculateStats(allBookings, allClients);
+  };
+
+  const loadServices = () => {
+    const defaultServices = [
+      {
+        id: 1,
+        name: 'Manicure Simples',
+        description: 'Cuidado básico das unhas das mãos',
+        price: 25.00,
+        duration: '45 min',
+        image: '💅'
+      },
+      {
+        id: 2,
+        name: 'Pedicure Completa',
+        description: 'Cuidado completo dos pés',
+        price: 35.00,
+        duration: '60 min',
+        image: '🦶'
+      },
+      {
+        id: 3,
+        name: 'Esmaltação em Gel',
+        description: 'Esmaltação com esmalte em gel',
+        price: 40.00,
+        duration: '90 min',
+        image: '✨'
+      },
+      {
+        id: 4,
+        name: 'Unha Decorada',
+        description: 'Nail art personalizada',
+        price: 50.00,
+        duration: '120 min',
+        image: '🎨'
+      }
+    ];
+    
+    const savedServices = JSON.parse(localStorage.getItem('services') || JSON.stringify(defaultServices));
+    setServices(savedServices);
   };
 
   const calculateStats = (bookings, clients) => {
     const today = new Date();
     const thisMonth = today.getMonth();
     const thisYear = today.getFullYear();
-
     const todayStr = today.toISOString().split('T')[0];
 
     const todayBookings = bookings.filter(b => b.date === todayStr && b.status !== 'cancelled');
@@ -68,44 +111,160 @@ const AdminDashboard = () => {
     });
   };
 
-  const getRecentBookings = () => {
-    return bookings
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 10);
+  const openModal = (type, data = {}) => {
+    setShowModal(type);
+    setFormData(data);
+    if (type === 'editService' && data.id) {
+      setSelectedService(data);
+    }
   };
 
-  const getTopClients = () => {
-    const clientStats = {};
-    
-    bookings.forEach(booking => {
-      if (booking.status !== 'cancelled') {
-        if (!clientStats[booking.userId]) {
-          const client = clients.find(c => c.id === booking.userId);
-          clientStats[booking.userId] = {
-            name: client?.name || 'Cliente não encontrado',
-            visits: 0,
-            totalSpent: 0
-          };
-        }
-        clientStats[booking.userId].visits++;
-        clientStats[booking.userId].totalSpent += booking.price;
-      }
-    });
-
-    return Object.entries(clientStats)
-      .map(([id, stats]) => ({ id, ...stats }))
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 5);
+  const closeModal = () => {
+    setShowModal(null);
+    setFormData({});
+    setSelectedService(null);
   };
 
-  const updateBookingStatus = (bookingId, newStatus) => {
-    const updatedBookings = bookings.map(booking =>
-      booking.id === bookingId ? { ...booking, status: newStatus } : booking
-    );
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const photoData = e.target.result;
+        setProfilePhoto(photoData);
+        
+        // Atualizar no localStorage
+        const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedUsers = users.map(u => 
+          u.id === user.id ? { ...u, profilePhoto: photoData } : u
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+        
+        alert('Foto de perfil atualizada com sucesso!');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
     
-    setBookings(updatedBookings);
-    localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
-    calculateStats(updatedBookings, clients);
+    switch(showModal) {
+      case 'changeAdminCredentials':
+        // Alterar credenciais do admin
+        const adminUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedAdmins = adminUsers.map(user => 
+          user.role === 'admin' ? 
+          { ...user, name: formData.name || user.name, username: formData.username || user.username, password: formData.password || user.password } : 
+          user
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedAdmins));
+        alert('Credenciais administrativas atualizadas com sucesso!');
+        break;
+        
+      case 'editClientData':
+        // Editar dados do cliente
+        const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedUsers = allUsers.map(user => 
+          user.id === formData.clientId ? { ...user, name: formData.name || user.name, email: formData.email || user.email, phone: formData.phone || user.phone } : user
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+        setClients(updatedUsers.filter(user => user.role !== 'admin'));
+        alert('Dados do cliente atualizados com sucesso!');
+        break;
+        
+      case 'addService':
+        // Adicionar novo serviço
+        const newService = {
+          id: Date.now(),
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          duration: formData.duration,
+          image: formData.image || '💅'
+        };
+        const updatedServices = [...services, newService];
+        setServices(updatedServices);
+        localStorage.setItem('services', JSON.stringify(updatedServices));
+        alert('Serviço adicionado com sucesso!');
+        break;
+        
+      case 'editService':
+        // Editar serviço existente
+        const editedServices = services.map(service => 
+          service.id === selectedService.id ? 
+          { ...service, name: formData.name || service.name, description: formData.description || service.description, price: formData.price ? parseFloat(formData.price) : service.price, duration: formData.duration || service.duration, image: formData.image || service.image } : 
+          service
+        );
+        setServices(editedServices);
+        localStorage.setItem('services', JSON.stringify(editedServices));
+        alert('Serviço atualizado com sucesso!');
+        break;
+        
+      case 'removeService':
+        // Remover serviço
+        const filteredServices = services.filter(service => service.id !== parseInt(formData.serviceId));
+        setServices(filteredServices);
+        localStorage.setItem('services', JSON.stringify(filteredServices));
+        alert('Serviço removido com sucesso!');
+        break;
+        
+      case 'createBooking':
+        // Criar novo agendamento
+        const newBooking = {
+          id: Date.now().toString(),
+          userId: formData.clientId,
+          serviceId: formData.serviceId,
+          serviceName: services.find(s => s.id === parseInt(formData.serviceId))?.name || 'Serviço',
+          date: formData.date,
+          time: formData.time,
+          duration: services.find(s => s.id === parseInt(formData.serviceId))?.duration || '60 min',
+          price: services.find(s => s.id === parseInt(formData.serviceId))?.price || 0,
+          notes: formData.notes || '',
+          status: 'confirmed',
+          createdAt: new Date().toISOString(),
+          afterHours: formData.afterHours || false
+        };
+        const updatedBookings = [...bookings, newBooking];
+        setBookings(updatedBookings);
+        localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+        calculateStats(updatedBookings, clients);
+        alert('Agendamento criado com sucesso!');
+        break;
+        
+      case 'editBooking':
+        // Editar agendamento
+        const editedBookings = bookings.map(booking => 
+          booking.id === formData.bookingId ? 
+          { ...booking, date: formData.date || booking.date, time: formData.time || booking.time, status: formData.status || booking.status, notes: formData.notes || booking.notes } : 
+          booking
+        );
+        setBookings(editedBookings);
+        localStorage.setItem('userBookings', JSON.stringify(editedBookings));
+        calculateStats(editedBookings, clients);
+        alert('Agendamento atualizado com sucesso!');
+        break;
+    }
+    
+    closeModal();
+    loadData();
+  };
+
+  const getAllTimeSlots = () => {
+    // Horários comerciais
+    const regularSlots = [
+      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+      '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+      '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+      '17:00', '17:30'
+    ];
+    
+    // Horários pós-expediente
+    const afterHoursSlots = [
+      '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'
+    ];
+    
+    return [...regularSlots, ...afterHoursSlots];
   };
 
   const formatDate = (dateStr) => {
@@ -147,72 +306,6 @@ const AdminDashboard = () => {
     );
   };
 
-  const toggleHamburgerMenu = () => {
-    setShowHamburgerMenu(!showHamburgerMenu);
-  };
-
-  const openModal = (type) => {
-    setShowModal(type);
-    setShowHamburgerMenu(false);
-    setFormData({});
-  };
-
-  const closeModal = () => {
-    setShowModal(null);
-    setFormData({});
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    
-    switch(showModal) {
-      case 'changeAdminCredentials':
-        // Atualizar credenciais do admin
-        const adminUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const updatedAdmins = adminUsers.map(user => 
-          user.role === 'admin' ? 
-          { ...user, name: formData.name || user.name, password: formData.password || user.password } : 
-          user
-        );
-        localStorage.setItem('registeredUsers', JSON.stringify(updatedAdmins));
-        alert('Credenciais administrativas atualizadas com sucesso!');
-        break;
-        
-      case 'editClientData':
-        // Editar dados do cliente
-        const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-        const updatedUsers = allUsers.map(user => 
-          user.id === formData.clientId ? { ...user, ...formData } : user
-        );
-        localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-        setClients(updatedUsers.filter(user => user.role !== 'admin'));
-        alert('Dados do cliente atualizados com sucesso!');
-        break;
-        
-      case 'manageBookings':
-        // Gerenciar agendamentos
-        const allBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-        const updatedBookings = allBookings.map(booking => 
-          booking.id === formData.bookingId ? { ...booking, status: formData.status } : booking
-        );
-        localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
-        setBookings(updatedBookings);
-        calculateStats(updatedBookings, clients);
-        alert('Agendamento atualizado com sucesso!');
-        break;
-        
-      case 'changeTheme':
-        // Alterar tema para branco
-        document.documentElement.style.setProperty('--primary-color', '#FFFFFF');
-        document.documentElement.style.setProperty('--secondary-color', '#000000');
-        localStorage.setItem('theme', 'white');
-        alert('Tema alterado para branco com sucesso!');
-        break;
-    }
-    
-    closeModal();
-  };
-
   return (
     <div className="dashboard-container">
       <div style={{ 
@@ -224,117 +317,111 @@ const AdminDashboard = () => {
         marginBottom: '30px',
         position: 'relative'
       }}>
-        <h1 style={{ margin: 0, fontSize: '2rem' }}>
-          👑 Painel Administrativo - {user.name}
-        </h1>
-        <p style={{ margin: '10px 0 0 0', fontSize: '1.1rem' }}>
-          Gestão completa do Salon Beleza Dourada
-        </p>
-        
-        {/* Menu Hambúrguer */}
         <div style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '15px',
+          marginBottom: '10px'
         }}>
-          <div 
-            onClick={toggleHamburgerMenu}
+          {profilePhoto && (
+            <img 
+              src={profilePhoto} 
+              alt="Perfil Admin" 
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                border: '3px solid #FFD700'
+              }}
+            />
+          )}
+          <div>
+            <h1 style={{ margin: 0, fontSize: '2rem' }}>
+              👑 Painel Administrativo - {user.name}
+            </h1>
+            <p style={{ margin: '10px 0 0 0', fontSize: '1.1rem' }}>
+              Gestão completa do Salon Beleza Dourada
+            </p>
+          </div>
+        </div>
+        
+        {/* Menu de Ações Rápidas */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '15px',
+          marginTop: '25px'
+        }}>
+          <button
+            onClick={() => openModal('changeAdminCredentials')}
             style={{
+              padding: '15px',
+              background: '#FFD700',
+              border: 'none',
+              borderRadius: '12px',
               cursor: 'pointer',
-              padding: '10px',
-              background: '#000',
-              borderRadius: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px'
+              fontWeight: 'bold',
+              color: '#000'
             }}
           >
-            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
-            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
-            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
-          </div>
+            🔐 Alterar Credenciais Admin
+          </button>
           
-          {/* Menu Dropdown */}
-          {showHamburgerMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: '0',
-              background: '#FFFFFF',
-              border: '2px solid #000',
+          <button
+            onClick={() => openModal('addService')}
+            style={{
+              padding: '15px',
+              background: '#4CAF50',
+              border: 'none',
               borderRadius: '12px',
-              minWidth: '280px',
-              padding: '20px',
-              zIndex: 1000,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-            }}>
-              <h3 style={{ margin: '0 0 15px 0', color: '#000', borderBottom: '1px solid #000', paddingBottom: '10px' }}>
-                ⚙️ Configurações
-              </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <button
-                  onClick={() => openModal('changeAdminCredentials')}
-                  style={{
-                    padding: '12px',
-                    background: 'transparent',
-                    border: '1px solid #000',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    color: '#000',
-                    textAlign: 'left'
-                  }}
-                >
-                  🔐 Alterar Usuário e Senha Admin
-                </button>
-                
-                <button
-                  onClick={() => openModal('editClientData')}
-                  style={{
-                    padding: '12px',
-                    background: 'transparent',
-                    border: '1px solid #000',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    color: '#000',
-                    textAlign: 'left'
-                  }}
-                >
-                  👤 Corrigir Dados de Usuários
-                </button>
-                
-                <button
-                  onClick={() => openModal('manageBookings')}
-                  style={{
-                    padding: '12px',
-                    background: 'transparent',
-                    border: '1px solid #000',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    color: '#000',
-                    textAlign: 'left'
-                  }}
-                >
-                  📅 Gerenciar Agendamentos
-                </button>
-                
-                <button
-                  onClick={() => openModal('changeTheme')}
-                  style={{
-                    padding: '12px',
-                    background: 'transparent',
-                    border: '1px solid #000',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    color: '#000',
-                    textAlign: 'left'
-                  }}
-                >
-                  🎨 Alterar Logo para Branco
-                </button>
-              </div>
-            </div>
-          )}
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              color: 'white'
+            }}
+          >
+            ➕ Adicionar Serviço
+          </button>
+          
+          <button
+            onClick={() => openModal('createBooking')}
+            style={{
+              padding: '15px',
+              background: '#2196F3',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              color: 'white'
+            }}
+          >
+            📅 Criar Agendamento
+          </button>
+          
+          <div>
+            <label 
+              htmlFor="adminPhotoUpload"
+              style={{
+                display: 'block',
+                padding: '15px',
+                background: '#FF9800',
+                border: 'none',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                color: 'white'
+              }}
+            >
+              📸 Alterar Foto Admin
+            </label>
+            <input
+              id="adminPhotoUpload"
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              style={{ display: 'none' }}
+            />
+          </div>
         </div>
       </div>
 
@@ -350,7 +437,8 @@ const AdminDashboard = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 2000
+          zIndex: 2000,
+          overflow: 'auto'
         }}>
           <div style={{
             background: '#FFFFFF',
@@ -358,7 +446,9 @@ const AdminDashboard = () => {
             borderRadius: '16px',
             minWidth: '400px',
             maxWidth: '600px',
-            color: '#000'
+            color: '#000',
+            maxHeight: '80vh',
+            overflow: 'auto'
           }}>
             {showModal === 'changeAdminCredentials' && (
               <form onSubmit={handleFormSubmit}>
@@ -368,6 +458,19 @@ const AdminDashboard = () => {
                   placeholder="Novo nome do administrador"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Novo usuário"
+                  value={formData.username || ''}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -419,7 +522,16 @@ const AdminDashboard = () => {
                 <h2 style={{ marginBottom: '20px' }}>👤 Editar Dados do Cliente</h2>
                 <select
                   value={formData.clientId || ''}
-                  onChange={(e) => setFormData({...formData, clientId: e.target.value})}
+                  onChange={(e) => {
+                    const client = clients.find(c => c.id === e.target.value);
+                    setFormData({
+                      ...formData, 
+                      clientId: e.target.value,
+                      name: client?.name || '',
+                      email: client?.email || '',
+                      phone: client?.phone || ''
+                    });
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -435,7 +547,7 @@ const AdminDashboard = () => {
                 </select>
                 <input
                   type="text"
-                  placeholder="Novo nome"
+                  placeholder="Nome"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   style={{
@@ -448,7 +560,7 @@ const AdminDashboard = () => {
                 />
                 <input
                   type="email"
-                  placeholder="Novo email"
+                  placeholder="Email"
                   value={formData.email || ''}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   style={{
@@ -461,7 +573,7 @@ const AdminDashboard = () => {
                 />
                 <input
                   type="tel"
-                  placeholder="Novo telefone"
+                  placeholder="Telefone"
                   value={formData.phone || ''}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   style={{
@@ -497,12 +609,15 @@ const AdminDashboard = () => {
               </form>
             )}
 
-            {showModal === 'manageBookings' && (
+            {showModal === 'addService' && (
               <form onSubmit={handleFormSubmit}>
-                <h2 style={{ marginBottom: '20px' }}>📅 Gerenciar Agendamentos</h2>
-                <select
-                  value={formData.bookingId || ''}
-                  onChange={(e) => setFormData({...formData, bookingId: e.target.value})}
+                <h2 style={{ marginBottom: '20px' }}>➕ Adicionar Novo Serviço</h2>
+                <input
+                  type="text"
+                  placeholder="Nome do serviço"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -510,17 +625,54 @@ const AdminDashboard = () => {
                     border: '1px solid #000',
                     borderRadius: '8px'
                   }}
-                >
-                  <option value="">Selecionar agendamento</option>
-                  {bookings.map(booking => (
-                    <option key={booking.id} value={booking.id}>
-                      {booking.serviceName} - {formatDate(booking.date)} {booking.time}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={formData.status || ''}
-                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                />
+                <textarea
+                  placeholder="Descrição do serviço"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Preço (R$)"
+                  value={formData.price || ''}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Duração (ex: 60 min)"
+                  value={formData.duration || ''}
+                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Emoji do serviço (ex: 💅)"
+                  value={formData.image || ''}
+                  onChange={(e) => setFormData({...formData, image: e.target.value})}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -528,13 +680,7 @@ const AdminDashboard = () => {
                     border: '1px solid #000',
                     borderRadius: '8px'
                   }}
-                >
-                  <option value="">Novo status</option>
-                  <option value="pending">Pendente</option>
-                  <option value="confirmed">Confirmado</option>
-                  <option value="completed">Concluído</option>
-                  <option value="cancelled">Cancelado</option>
-                </select>
+                />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
@@ -544,7 +690,7 @@ const AdminDashboard = () => {
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
-                    Atualizar
+                    Adicionar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
@@ -560,15 +706,77 @@ const AdminDashboard = () => {
               </form>
             )}
 
-            {showModal === 'changeTheme' && (
-              <div>
-                <h2 style={{ marginBottom: '20px' }}>🎨 Alterar Tema</h2>
-                <p style={{ marginBottom: '20px' }}>
-                  Tem certeza que deseja alterar a logo e tema para branco?
-                  Isso removerá o gradiente preto e dourado atual.
-                </p>
+            {showModal === 'editService' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>✏️ Editar Serviço</h2>
+                <input
+                  type="text"
+                  placeholder="Nome do serviço"
+                  value={formData.name || selectedService?.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <textarea
+                  placeholder="Descrição do serviço"
+                  value={formData.description || selectedService?.description || ''}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Preço (R$)"
+                  value={formData.price || selectedService?.price || ''}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Duração (ex: 60 min)"
+                  value={formData.duration || selectedService?.duration || ''}
+                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Emoji do serviço"
+                  value={formData.image || selectedService?.image || ''}
+                  onChange={(e) => setFormData({...formData, image: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={handleFormSubmit} style={{
+                  <button type="submit" style={{
                     padding: '12px 20px',
                     background: '#000',
                     color: '#FFFFFF',
@@ -576,9 +784,9 @@ const AdminDashboard = () => {
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
-                    Confirmar
+                    Salvar
                   </button>
-                  <button onClick={closeModal} style={{
+                  <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
                     color: '#000',
@@ -589,7 +797,286 @@ const AdminDashboard = () => {
                     Cancelar
                   </button>
                 </div>
-              </div>
+              </form>
+            )}
+
+            {showModal === 'removeService' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>❌ Remover Serviço</h2>
+                <select
+                  value={formData.serviceId || ''}
+                  onChange={(e) => setFormData({...formData, serviceId: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar serviço para remover</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} - {formatCurrency(service.price)}
+                    </option>
+                  ))}
+                </select>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#FF4444',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Remover
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'createBooking' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>📅 Criar Novo Agendamento</h2>
+                <select
+                  value={formData.clientId || ''}
+                  onChange={(e) => setFormData({...formData, clientId: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar cliente</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>{client.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={formData.serviceId || ''}
+                  onChange={(e) => setFormData({...formData, serviceId: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar serviço</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.id}>
+                      {service.name} - {formatCurrency(service.price)} ({service.duration})
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="date"
+                  value={formData.date || ''}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <select
+                  value={formData.time || ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    const isAfterHours = time >= '18:00';
+                    setFormData({...formData, time, afterHours: isAfterHours});
+                  }}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar horário</option>
+                  {getAllTimeSlots().map(time => (
+                    <option key={time} value={time}>
+                      {time} {time >= '18:00' ? '(Pós-expediente)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  placeholder="Observações (opcional)"
+                  value={formData.notes || ''}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Criar Agendamento
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'editBooking' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>✏️ Editar Agendamento</h2>
+                <select
+                  value={formData.bookingId || ''}
+                  onChange={(e) => {
+                    const booking = bookings.find(b => b.id === e.target.value);
+                    setFormData({
+                      ...formData, 
+                      bookingId: e.target.value,
+                      date: booking?.date || '',
+                      time: booking?.time || '',
+                      status: booking?.status || '',
+                      notes: booking?.notes || ''
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar agendamento</option>
+                  {bookings.map(booking => {
+                    const client = clients.find(c => c.id === booking.userId);
+                    return (
+                      <option key={booking.id} value={booking.id}>
+                        {client?.name || 'Cliente'} - {booking.serviceName} - {formatDate(booking.date)} {booking.time}
+                      </option>
+                    );
+                  })}
+                </select>
+                <input
+                  type="date"
+                  value={formData.date || ''}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <select
+                  value={formData.time || ''}
+                  onChange={(e) => setFormData({...formData, time: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar novo horário</option>
+                  {getAllTimeSlots().map(time => (
+                    <option key={time} value={time}>
+                      {time} {time >= '18:00' ? '(Pós-expediente)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Alterar status</option>
+                  <option value="pending">Pendente</option>
+                  <option value="confirmed">Confirmado</option>
+                  <option value="completed">Concluído</option>
+                  <option value="cancelled">Cancelado</option>
+                </select>
+                <textarea
+                  placeholder="Observações"
+                  value={formData.notes || ''}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Salvar Alterações
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
             )}
           </div>
         </div>
@@ -625,7 +1112,7 @@ const AdminDashboard = () => {
 
       {/* Navegação por abas */}
       <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['overview', 'bookings', 'clients', 'reports', 'automation'].map(tab => (
+        {['overview', 'services', 'bookings', 'clients', 'automation'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -636,9 +1123,9 @@ const AdminDashboard = () => {
             }}
           >
             {tab === 'overview' && '📊 Visão Geral'}
+            {tab === 'services' && '💅 Gerenciar Serviços'}
             {tab === 'bookings' && '📅 Agendamentos'}
             {tab === 'clients' && '👥 Clientes'}
-            {tab === 'reports' && '📈 Relatórios'}
             {tab === 'automation' && '🤖 Automação N8n'}
           </button>
         ))}
@@ -653,7 +1140,7 @@ const AdminDashboard = () => {
               <h3 className="card-title">Agendamentos Recentes</h3>
             </div>
             <div className="card-content">
-              {getRecentBookings().slice(0, 5).map(booking => {
+              {bookings.slice(0, 5).map(booking => {
                 const client = clients.find(c => c.id === booking.userId);
                 return (
                   <div key={booking.id} style={{ 
@@ -673,42 +1160,73 @@ const AdminDashboard = () => {
               })}
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="dashboard-card">
-            <div className="card-header">
-              <span className="card-icon">🏆</span>
-              <h3 className="card-title">Top 5 Clientes</h3>
-            </div>
-            <div className="card-content">
-              {getTopClients().map((client, index) => (
-                <div key={client.id} style={{ 
-                  padding: '10px 0', 
-                  borderBottom: '1px solid rgba(255, 215, 0, 0.2)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div>
-                    <span style={{ 
-                      background: index < 3 ? '#FFD700' : 'rgba(255, 215, 0, 0.3)',
-                      color: index < 3 ? '#000' : '#FFD700',
-                      padding: '2px 6px',
-                      borderRadius: '50%',
-                      fontSize: '0.8rem',
-                      fontWeight: 'bold',
-                      marginRight: '10px'
-                    }}>
-                      {index + 1}
-                    </span>
-                    <strong>{client.name}</strong><br />
-                    <small>{client.visits} visitas</small>
-                  </div>
-                  <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                    {formatCurrency(client.totalSpent)}
-                  </span>
+      {activeTab === 'services' && (
+        <div>
+          <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
+            💅 Gestão de Serviços
+          </h2>
+          
+          <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => openModal('addService')}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ➕ Adicionar Serviço
+            </button>
+            <button
+              onClick={() => openModal('removeService')}
+              style={{
+                padding: '10px 20px',
+                background: '#FF4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ❌ Remover Serviço
+            </button>
+          </div>
+          
+          <div className="dashboard-grid">
+            {services.map(service => (
+              <div key={service.id} className="dashboard-card">
+                <div className="card-header">
+                  <span className="card-icon">{service.image}</span>
+                  <h3 className="card-title">{service.name}</h3>
                 </div>
-              ))}
-            </div>
+                <div className="card-content">
+                  <p>{service.description}</p>
+                  <p><strong>Preço:</strong> {formatCurrency(service.price)}</p>
+                  <p><strong>Duração:</strong> {service.duration}</p>
+                  <button
+                    onClick={() => openModal('editService', service)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: '#FFD700',
+                      color: '#000',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      marginTop: '10px'
+                    }}
+                  >
+                    ✏️ Editar Serviço
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -718,6 +1236,36 @@ const AdminDashboard = () => {
           <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
             📅 Gestão de Agendamentos
           </h2>
+          
+          <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => openModal('createBooking')}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ➕ Criar Agendamento
+            </button>
+            <button
+              onClick={() => openModal('editBooking')}
+              style={{
+                padding: '10px 20px',
+                background: '#FF9800',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ✏️ Editar Agendamento
+            </button>
+          </div>
+          
           <div style={{ overflowX: 'auto' }}>
             <table style={{
               width: '100%',
@@ -733,11 +1281,11 @@ const AdminDashboard = () => {
                   <th style={{ padding: '15px', textAlign: 'left' }}>Data/Hora</th>
                   <th style={{ padding: '15px', textAlign: 'left' }}>Valor</th>
                   <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Ações</th>
+                  <th style={{ padding: '15px', textAlign: 'left' }}>Tipo</th>
                 </tr>
               </thead>
               <tbody>
-                {getRecentBookings().map(booking => {
+                {bookings.map(booking => {
                   const client = clients.find(c => c.id === booking.userId);
                   return (
                     <tr key={booking.id} style={{ borderBottom: '1px solid rgba(255, 215, 0, 0.1)' }}>
@@ -750,22 +1298,27 @@ const AdminDashboard = () => {
                       <td style={{ padding: '15px' }}>{formatCurrency(booking.price)}</td>
                       <td style={{ padding: '15px' }}>{getStatusBadge(booking.status)}</td>
                       <td style={{ padding: '15px' }}>
-                        <select
-                          value={booking.status}
-                          onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
-                          style={{
-                            background: 'rgba(0, 0, 0, 0.7)',
-                            color: 'white',
-                            border: '1px solid rgba(255, 215, 0, 0.3)',
-                            borderRadius: '6px',
-                            padding: '5px'
-                          }}
-                        >
-                          <option value="pending">Pendente</option>
-                          <option value="confirmed">Confirmado</option>
-                          <option value="completed">Concluído</option>
-                          <option value="cancelled">Cancelado</option>
-                        </select>
+                        {booking.afterHours ? (
+                          <span style={{ 
+                            background: '#FF9800', 
+                            color: 'white', 
+                            padding: '4px 8px', 
+                            borderRadius: '12px', 
+                            fontSize: '0.8rem' 
+                          }}>
+                            Pós-expediente
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            background: '#4CAF50', 
+                            color: 'white', 
+                            padding: '4px 8px', 
+                            borderRadius: '12px', 
+                            fontSize: '0.8rem' 
+                          }}>
+                            Comercial
+                          </span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -781,6 +1334,23 @@ const AdminDashboard = () => {
           <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
             👥 Gestão de Clientes
           </h2>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <button
+              onClick={() => openModal('editClientData')}
+              style={{
+                padding: '10px 20px',
+                background: '#FFD700',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ✏️ Editar Dados de Cliente
+            </button>
+          </div>
+          
           <div className="dashboard-grid">
             {clients.map(client => (
               <div key={client.id} className="dashboard-card">
@@ -799,57 +1369,6 @@ const AdminDashboard = () => {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'reports' && (
-        <div>
-          <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
-            📈 Relatórios e Análises
-          </h2>
-          <div className="dashboard-grid">
-            <div className="dashboard-card">
-              <div className="card-header">
-                <span className="card-icon">💰</span>
-                <h3 className="card-title">Resumo Financeiro</h3>
-              </div>
-              <div className="card-content">
-                <div style={{ marginBottom: '15px' }}>
-                  <strong>Faturamento por Período:</strong>
-                  <ul style={{ marginTop: '10px' }}>
-                    <li>Hoje: {formatCurrency(stats.todayRevenue)}</li>
-                    <li>Este Mês: {formatCurrency(stats.monthRevenue)}</li>
-                    <li>Este Ano: {formatCurrency(stats.yearRevenue)}</li>
-                  </ul>
-                </div>
-                <div>
-                  <strong>Média por Atendimento:</strong> {formatCurrency(stats.monthBookings > 0 ? stats.monthRevenue / stats.monthBookings : 0)}
-                </div>
-              </div>
-            </div>
-
-            <div className="dashboard-card">
-              <div className="card-header">
-                <span className="card-icon">📊</span>
-                <h3 className="card-title">Estatísticas de Atendimento</h3>
-              </div>
-              <div className="card-content">
-                <div style={{ marginBottom: '15px' }}>
-                  <strong>Agendamentos por Período:</strong>
-                  <ul style={{ marginTop: '10px' }}>
-                    <li>Hoje: {stats.todayBookings}</li>
-                    <li>Este Mês: {stats.monthBookings}</li>
-                    <li>Total de Clientes: {stats.totalClients}</li>
-                  </ul>
-                </div>
-                <div>
-                  <strong>Taxa de Ocupação Hoje:</strong> {((stats.todayBookings / 20) * 100).toFixed(1)}%
-                  <br />
-                  <small>(Baseado em 20 horários disponíveis por dia)</small>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}
