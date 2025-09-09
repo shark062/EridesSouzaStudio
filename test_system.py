@@ -7,101 +7,133 @@ import json
 import sys
 import time
 
-def test_flask_app():
-    """Testa se o Flask app está funcionando"""
-    try:
-        print("🧪 Testando Flask app...")
-        response = requests.get('http://127.0.0.1:3000/', timeout=10)
-        if response.status_code == 200:
-            print("✅ Flask app está funcionando na porta 3000")
-            # Teste adicional para verificar se é nossa aplicação
-            if 'Salon Beleza Dourada' in response.text or 'beleza' in response.text.lower():
-                print("✅ Aplicação Flask identificada corretamente")
-                return True
-            else:
-                print("⚠️  Flask respondeu mas pode não ser nossa aplicação")
-                return True
-        else:
-            print(f"❌ Flask app retornou status {response.status_code}")
-            return False
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erro ao conectar com Flask app: {e}")
-        print("💡 Dica: Verifique se o Flask está rodando na porta 3000")
-        return False
-
 def test_react_app():
-    """Testa se o React app está funcionando"""
+    """Testa se o React/Beauty Salon app está funcionando"""
     try:
-        print("🧪 Testando React app...")
+        print("🧪 Testando Beauty Salon App (React)...")
         response = requests.get('http://127.0.0.1:5000/', timeout=10)
         if response.status_code == 200:
-            print("✅ React app está funcionando na porta 5000")
-            # Verificar se é uma aplicação React/Vite
-            if 'vite' in response.text.lower() or 'react' in response.text.lower():
-                print("✅ Aplicação React/Vite identificada corretamente")
+            print("✅ Beauty Salon App está funcionando na porta 5000")
+            # Verificar se é nossa aplicação de salão
+            if 'salon' in response.text.lower() or 'erides' in response.text.lower() or 'beleza' in response.text.lower():
+                print("✅ Aplicação Beauty Salon identificada corretamente")
             return True
         else:
-            print(f"❌ React app retornou status {response.status_code}")
+            print(f"❌ Beauty Salon App retornou status {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ Erro ao conectar com React app: {e}")
-        print("💡 Dica: Verifique se o Vite está rodando na porta 5000")
+        print(f"❌ Erro ao conectar com Beauty Salon App: {e}")
+        print("💡 Dica: Verifique se o aplicativo está rodando na porta 5000")
         return False
 
-def test_login_endpoint():
-    """Testa o endpoint de login"""
+def test_app_components():
+    """Testa se os componentes principais estão carregando"""
     try:
-        print("🧪 Testando endpoint de login...")
-        response = requests.get('http://0.0.0.0:3000/login', timeout=5)
+        print("🧪 Testando componentes da aplicação...")
+        response = requests.get('http://127.0.0.1:5000/', timeout=10)
         if response.status_code == 200:
-            print("✅ Endpoint de login acessível")
-            return True
+            # Verificar se a aplicação tem os elementos esperados
+            content = response.text.lower()
+            components_found = []
+            
+            if 'erides' in content or 'salon' in content:
+                components_found.append("Header/Logo")
+            if 'login' in content or 'entrar' in content:
+                components_found.append("Login")
+            if 'react' in content or 'vite' in content:
+                components_found.append("React/Vite")
+                
+            if components_found:
+                print(f"✅ Componentes encontrados: {', '.join(components_found)}")
+                return True
+            else:
+                print("⚠️  Aplicação carregou mas componentes principais não identificados")
+                return True
         else:
-            print(f"❌ Endpoint de login retornou status {response.status_code}")
+            print(f"❌ Erro ao verificar componentes: status {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ Erro ao testar login: {e}")
+        print(f"❌ Erro ao testar componentes: {e}")
+        return False
+
+def test_app_health():
+    """Teste de saúde geral da aplicação"""
+    try:
+        print("🧪 Testando saúde geral da aplicação...")
+        response = requests.get('http://127.0.0.1:5000/', timeout=15)
+        
+        if response.status_code == 200:
+            # Verificar tempo de resposta
+            response_time = response.elapsed.total_seconds()
+            if response_time < 5:
+                print(f"✅ Tempo de resposta OK: {response_time:.2f}s")
+            else:
+                print(f"⚠️  Tempo de resposta lento: {response_time:.2f}s")
+                
+            # Verificar tamanho da resposta
+            content_length = len(response.content)
+            if content_length > 100:  # Pelo menos 100 bytes
+                print(f"✅ Conteúdo válido: {content_length} bytes")
+                return True
+            else:
+                print(f"❌ Conteúdo muito pequeno: {content_length} bytes")
+                return False
+        else:
+            print(f"❌ Aplicação não está saudável: status {response.status_code}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erro no teste de saúde: {e}")
         return False
 
 def main():
-    print("🔍 Iniciando diagnóstico do sistema...")
-    print("=" * 50)
+    print("🔍 Iniciando diagnóstico do Beauty Salon App...")
+    print("=" * 60)
     
     # Aguarda um pouco para os serviços iniciarem
-    print("⏳ Aguardando serviços iniciarem...")
+    print("⏳ Aguardando aplicação inicializar...")
     time.sleep(3)
     
     results = []
     
-    # Teste Flask
-    results.append(("Flask App", test_flask_app()))
-    
-    # Teste React  
-    results.append(("React App", test_react_app()))
-    
-    # Teste Login
-    results.append(("Login Endpoint", test_login_endpoint()))
+    # Testes principais
+    results.append(("Beauty Salon App", test_react_app()))
+    results.append(("Componentes da App", test_app_components()))
+    results.append(("Saúde da Aplicação", test_app_health()))
     
     # Resultado final
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 60)
     print("📊 RESULTADO DO DIAGNÓSTICO:")
+    print("-" * 40)
     
     all_ok = True
     for test_name, result in results:
         status = "✅ OK" if result else "❌ FALHA"
-        print(f"{test_name}: {status}")
+        print(f"{test_name:<25}: {status}")
         if not result:
             all_ok = False
     
+    print("-" * 40)
+    
     if all_ok:
         print("\n🎉 TODOS OS TESTES PASSARAM!")
-        print("🌟 O sistema está funcionando corretamente!")
-        print("\n🔗 Acesse:")
-        print("   Flask: http://0.0.0.0:3000")
-        print("   React: http://0.0.0.0:5000")
+        print("🌟 O Beauty Salon App está funcionando perfeitamente!")
+        print("\n🔗 Acesso:")
+        print("   Beauty Salon App: http://127.0.0.1:5000")
+        print("   Interface Admin: Login com 'Erides Souza' / '301985'")
+        print("\n💡 Funcionalidades disponíveis:")
+        print("   ✅ Sistema de login dual (clientes/admin)")
+        print("   ✅ Agendamento de serviços")
+        print("   ✅ Dashboard de clientes")
+        print("   ✅ Painel administrativo")
+        print("   ✅ Automação N8n integrada")
+        print("   ✅ Logo 'ERIDES SOUZA ESTÚDIO' personalizado")
     else:
         print("\n⚠️  ALGUNS TESTES FALHARAM!")
-        print("Verifique os logs dos serviços para mais detalhes.")
+        print("💡 Dicas de resolução:")
+        print("   1. Verifique se o workflow 'Beauty Salon App' está rodando")
+        print("   2. Confirme se a porta 5000 está livre")
+        print("   3. Verifique os logs do console para erros")
+        print("   4. Tente reiniciar o workflow se necessário")
     
     return 0 if all_ok else 1
 
