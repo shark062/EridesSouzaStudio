@@ -1,5 +1,4 @@
-
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from datetime import datetime, timedelta
 import json
 import os
@@ -260,11 +259,11 @@ admin_credentials = {'username': 'Erides Souza', 'password': '301985'}
 def load_data():
     """Carrega dados dos arquivos JSON se existirem"""
     global users_db, bookings_db
-    
+
     if os.path.exists('users.json'):
         with open('users.json', 'r', encoding='utf-8') as f:
             users_db = json.load(f)
-    
+
     if os.path.exists('bookings.json'):
         with open('bookings.json', 'r', encoding='utf-8') as f:
             bookings_db = json.load(f)
@@ -273,7 +272,7 @@ def save_data():
     """Salva dados nos arquivos JSON"""
     with open('users.json', 'w', encoding='utf-8') as f:
         json.dump(users_db, f, ensure_ascii=False, indent=2)
-    
+
     with open('bookings.json', 'w', encoding='utf-8') as f:
         json.dump(bookings_db, f, ensure_ascii=False, indent=2)
 
@@ -304,7 +303,7 @@ def login():
         username = data.get('username')
         password = data.get('password')
         user_type = data.get('userType', 'client')
-        
+
         if user_type == 'admin':
             if username == admin_credentials['username'] and password == admin_credentials['password']:
                 session['user'] = {
@@ -315,7 +314,7 @@ def login():
                 return jsonify({'success': True, 'redirect': '/admin'})
             else:
                 return jsonify({'success': False, 'message': 'Credenciais administrativas inválidas'})
-        
+
         # Login de cliente
         user = users_db.get(username)
         if user and user['password'] == password:
@@ -323,17 +322,17 @@ def login():
             return jsonify({'success': True, 'redirect': '/dashboard'})
         else:
             return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'})
-    
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         data = request.get_json()
-        
+
         if data['username'] in users_db:
             return jsonify({'success': False, 'message': 'Usuário já existe'})
-        
+
         user = {
             'id': str(uuid.uuid4()),
             'username': data['username'],
@@ -347,25 +346,25 @@ def register():
             'total_visits': 0,
             'created_at': datetime.now().isoformat()
         }
-        
+
         users_db[data['username']] = user
         save_data()
-        
+
         return jsonify({'success': True, 'message': 'Usuário criado com sucesso'})
-    
+
     return render_template('register.html')
 
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
         return redirect(url_for('login'))
-    
+
     user = session['user']
     user_bookings = [b for b in bookings_db if b.get('user_id') == user['id']]
-    
+
     # Verifica se é aniversário
     birthday = is_birthday(user.get('birth_date', ''))
-    
+
     return render_template('dashboard.html', 
                          user=user, 
                          bookings=user_bookings,
@@ -376,18 +375,18 @@ def dashboard():
 def admin():
     if 'user' not in session or session['user']['type'] != 'admin':
         return redirect(url_for('login'))
-    
+
     # Estatísticas do admin
     today = datetime.now().date()
     today_bookings = [b for b in bookings_db if b.get('date') == today.isoformat()]
-    
+
     stats = {
         'today_bookings': len(today_bookings),
         'today_revenue': sum(b.get('price', 0) for b in today_bookings),
         'total_clients': len(users_db),
         'total_bookings': len(bookings_db)
     }
-    
+
     return render_template('admin.html', 
                          stats=stats,
                          bookings=bookings_db,
@@ -401,36 +400,36 @@ def api_services():
 def api_book():
     if 'user' not in session:
         return jsonify({'success': False, 'message': 'Usuário não logado'})
-    
+
     data = request.get_json()
     user = session['user']
-    
+
     # Encontra o serviço
     service = None
     for s in get_all_services():
         if s['id'] == data['service_id']:
             service = s
             break
-    
+
     if not service:
         return jsonify({'success': False, 'message': 'Serviço não encontrado'})
-    
+
     # Verifica conflitos de horário
     existing_booking = next((b for b in bookings_db 
                            if b.get('date') == data['date'] 
                            and b.get('time') == data['time']
                            and b.get('status') != 'cancelled'), None)
-    
+
     if existing_booking:
         return jsonify({'success': False, 'message': 'Horário já ocupado'})
-    
+
     # Calcula preço com desconto de aniversário
     price = service['price']
     discount_applied = False
     if is_birthday(user.get('birth_date', '')):
         price *= 0.9  # 10% de desconto
         discount_applied = True
-    
+
     booking = {
         'id': str(uuid.uuid4()),
         'user_id': user['id'],
@@ -446,63 +445,63 @@ def api_book():
         'notes': data.get('notes', ''),
         'created_at': datetime.now().isoformat()
     }
-    
+
     bookings_db.append(booking)
-    
+
     # Atualiza pontos de fidelidade do usuário
     if user['username'] in users_db:
         users_db[user['username']]['loyalty_points'] += int(price)
         users_db[user['username']]['total_visits'] += 1
-    
+
     save_data()
-    
+
     return jsonify({'success': True, 'booking': booking})
 
 @app.route('/api/cancel_booking', methods=['POST'])
 def api_cancel_booking():
     if 'user' not in session:
         return jsonify({'success': False, 'message': 'Usuário não logado'})
-    
+
     data = request.get_json()
     booking_id = data.get('booking_id')
-    
+
     booking = next((b for b in bookings_db if b['id'] == booking_id), None)
-    
+
     if not booking:
         return jsonify({'success': False, 'message': 'Agendamento não encontrado'})
-    
+
     user = session['user']
     if booking['user_id'] != user['id'] and user['type'] != 'admin':
         return jsonify({'success': False, 'message': 'Não autorizado'})
-    
+
     booking['status'] = 'cancelled'
     save_data()
-    
+
     return jsonify({'success': True, 'message': 'Agendamento cancelado'})
 
 @app.route('/api/admin/bookings', methods=['GET', 'POST'])
 def api_admin_bookings():
     if 'user' not in session or session['user']['type'] != 'admin':
         return jsonify({'success': False, 'message': 'Acesso negado'})
-    
+
     if request.method == 'GET':
         return jsonify({'bookings': bookings_db})
-    
+
     if request.method == 'POST':
         data = request.get_json()
         action = data.get('action')
         booking_id = data.get('booking_id')
-        
+
         booking = next((b for b in bookings_db if b['id'] == booking_id), None)
-        
+
         if not booking:
             return jsonify({'success': False, 'message': 'Agendamento não encontrado'})
-        
+
         if action == 'update_status':
             booking['status'] = data.get('status')
         elif action == 'update_notes':
             booking['admin_notes'] = data.get('notes', '')
-        
+
         save_data()
         return jsonify({'success': True, 'booking': booking})
 
@@ -510,6 +509,10 @@ def api_admin_bookings():
 def logout():
     session.pop('user', None)
     return redirect(url_for('index'))
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
 
 if __name__ == '__main__':
     load_data()
