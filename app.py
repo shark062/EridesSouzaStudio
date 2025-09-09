@@ -3,9 +3,17 @@ from datetime import datetime, timedelta
 import json
 import os
 import uuid
+import sys
+
+# Configuração de encoding para Python
+if sys.version_info[0] >= 3:
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 app = Flask(__name__)
-app.secret_key = 'salon_beleza_dourada_secret_key'
+app.secret_key = 'salon_beleza_dourada_secret_key_2024_super_secure_key_beleza_dourada'
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # Dados dos serviços expandidos
 SERVICES = {
@@ -260,21 +268,39 @@ def load_data():
     """Carrega dados dos arquivos JSON se existirem"""
     global users_db, bookings_db
 
-    if os.path.exists('users.json'):
-        with open('users.json', 'r', encoding='utf-8') as f:
-            users_db = json.load(f)
+    try:
+        if os.path.exists('users.json'):
+            with open('users.json', 'r', encoding='utf-8') as f:
+                users_db = json.load(f)
+        else:
+            users_db = {}
+    except Exception as e:
+        print(f"Erro ao carregar users.json: {e}")
+        users_db = {}
 
-    if os.path.exists('bookings.json'):
-        with open('bookings.json', 'r', encoding='utf-8') as f:
-            bookings_db = json.load(f)
+    try:
+        if os.path.exists('bookings.json'):
+            with open('bookings.json', 'r', encoding='utf-8') as f:
+                bookings_db = json.load(f)
+        else:
+            bookings_db = []
+    except Exception as e:
+        print(f"Erro ao carregar bookings.json: {e}")
+        bookings_db = []
 
 def save_data():
     """Salva dados nos arquivos JSON"""
-    with open('users.json', 'w', encoding='utf-8') as f:
-        json.dump(users_db, f, ensure_ascii=False, indent=2)
+    try:
+        with open('users.json', 'w', encoding='utf-8') as f:
+            json.dump(users_db, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Erro ao salvar users.json: {e}")
 
-    with open('bookings.json', 'w', encoding='utf-8') as f:
-        json.dump(bookings_db, f, ensure_ascii=False, indent=2)
+    try:
+        with open('bookings.json', 'w', encoding='utf-8') as f:
+            json.dump(bookings_db, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Erro ao salvar bookings.json: {e}")
 
 def get_all_services():
     """Retorna todos os serviços em uma lista única"""
@@ -618,8 +644,12 @@ def forgot_password():
             return jsonify({'success': False, 'message': 'Email não encontrado'})
         
         # Gera token de recuperação (em produção, usar biblioteca como itsdangerous)
-        import secrets
-        reset_token = secrets.token_urlsafe(32)
+        try:
+            import secrets
+            reset_token = secrets.token_urlsafe(32)
+        except ImportError:
+            import uuid
+            reset_token = str(uuid.uuid4()).replace('-', '')
         
         # Salva o token temporariamente (em produção, usar banco de dados com expiração)
         if not hasattr(app, 'reset_tokens'):
@@ -700,7 +730,15 @@ def static_files(filename):
     return send_from_directory('static', filename)
 
 if __name__ == '__main__':
-    load_data()
-    print(f"Aplicação iniciada. Credenciais admin: {admin_credentials}")
-    print(f"Usuários carregados: {len(users_db)}")
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    try:
+        load_data()
+        print(f"Aplicação iniciada. Credenciais admin: {admin_credentials}")
+        print(f"Usuários carregados: {len(users_db)}")
+        print(f"Agendamentos carregados: {len(bookings_db)}")
+        print("🌟 Salon Beleza Dourada - Sistema iniciado com sucesso!")
+        print("📍 Acesse: http://localhost:3000")
+        app.run(host='0.0.0.0', port=3000, debug=True)
+    except Exception as e:
+        print(f"Erro ao iniciar a aplicação: {e}")
+        print("Tentando iniciar com configurações básicas...")
+        app.run(host='0.0.0.0', port=3000, debug=False)
