@@ -304,15 +304,22 @@ def login():
         password = data.get('password')
         user_type = data.get('userType', 'client')
 
+        print(f"Tentativa de login: user_type={user_type}, username={username}")
+        
         if user_type == 'admin':
+            print(f"Verificando credenciais admin: {username} == {admin_credentials['username']}")
+            print(f"Senha: {password} == {admin_credentials['password']}")
+            
             if username == admin_credentials['username'] and password == admin_credentials['password']:
                 session['user'] = {
                     'id': 'admin',
                     'name': username,
                     'type': 'admin'
                 }
+                print("Login admin bem-sucedido")
                 return jsonify({'success': True, 'redirect': '/admin'})
             else:
+                print("Credenciais admin inválidas")
                 return jsonify({'success': False, 'message': 'Credenciais administrativas inválidas'})
 
         # Login de cliente
