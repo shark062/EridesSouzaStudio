@@ -48,7 +48,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
       
       <div className="auth-card" style={getCardStyle(true)}>
         <div className="auth-header">
-          <h1 className="salon-title">✨ Salon Beleza Dourada ✨</h1>
+          <h1 className="salon-title">ERIDES SOUZA ESTÚDIO</h1>
           <p className="salon-subtitle">Bem-vindo ao seu espaço de beleza</p>
         </div>
 

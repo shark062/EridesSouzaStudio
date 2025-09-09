@@ -94,7 +94,7 @@
 .salon-title {
   font-size: 2.5rem;
   font-weight: bold;
-  background: linear-gradient(135deg, #FFD700, #FFF8DC, #B8860B);
+  background: linear-gradient(135deg, #000000, #2d2d2d, #FFD700, #B8860B);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
