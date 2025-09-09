@@ -1,26 +1,19 @@
-modules = ["nodejs-20"]
+
+modules = ["python-3.11"]
+
 [agent]
 expertMode = true
 
 [workflows]
-runButton = "Project"
+runButton = "Beauty Salon Python"
 
 [[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Servidor Beauty Salon"
-
-[[workflows.workflow]]
-name = "Servidor Beauty Salon"
+name = "Beauty Salon Python"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd beauty-salon-app && npm run dev"
+args = "python app.py"
 waitForPort = 5000
 
 [workflows.workflow.metadata]

@@ -1,0 +1,120 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <h1>👑 Painel Administrativo</h1>
+    <p>Gestão completa do Salon Beleza Dourada</p>
+    <a href="/logout" class="btn btn-secondary" style="float: right;">Sair</a>
+</div>
+
+<div class="grid grid-4 mb-20">
+    <div class="card text-center">
+        <div style="font-size: 2rem; color: #FFD700;">{{ stats.today_bookings }}</div>
+        <div>Agendamentos Hoje</div>
+    </div>
+    
+    <div class="card text-center">
+        <div style="font-size: 2rem; color: #FFD700;">R$ {{ "%.2f"|format(stats.today_revenue) }}</div>
+        <div>Faturamento Hoje</div>
+    </div>
+    
+    <div class="card text-center">
+        <div style="font-size: 2rem; color: #FFD700;">{{ stats.total_clients }}</div>
+        <div>Total de Clientes</div>
+    </div>
+    
+    <div class="card text-center">
+        <div style="font-size: 2rem; color: #FFD700;">{{ stats.total_bookings }}</div>
+        <div>Total de Agendamentos</div>
+    </div>
+</div>
+
+<div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('bookings')">Agendamentos</button>
+    <button class="nav-tab" onclick="showTab('services')">Serviços</button>
+</div>
+
+<div id="bookingsTab" class="tab-content">
+    <div class="card">
+        <h3 style="color: #FFD700; margin-bottom: 20px;">Agendamentos Recentes</h3>
+        
+        {% if bookings %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255,215,0,0.3);">
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Cliente</th>
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Serviço</th>
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Data</th>
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Hora</th>
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Valor</th>
+                        <th style="padding: 12px; text-align: left; color: #FFD700;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings[-10:] %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">{{ booking.get('user_name', 'Cliente') }}</td>
+                        <td style="padding: 12px;">{{ booking.service_name }}</td>
+                        <td style="padding: 12px;">{{ booking.date }}</td>
+                        <td style="padding: 12px;">{{ booking.time }}</td>
+                        <td style="padding: 12px;">R$ {{ "%.2f"|format(booking.price) }}</td>
+                        <td style="padding: 12px;">
+                            <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 8px; font-size: 0.8rem;">
+                                {{ booking.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align: center; color: rgba(255,255,255,0.7);">
+            Nenhum agendamento encontrado.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="servicesTab" class="tab-content" style="display: none;">
+    <div class="card">
+        <h3 style="color: #FFD700; margin-bottom: 20px;">Catálogo de Serviços</h3>
+        
+        <div class="services-grid">
+            {% for service in services %}
+            <div class="service-card">
+                <div class="service-emoji">{{ service.image }}</div>
+                <div class="service-name">{{ service.name }}</div>
+                <div class="service-description">{{ service.description }}</div>
+                <div class="service-price">R$ {{ "%.2f"|format(service.price) }}</div>
+                <div class="service-duration">⏱️ {{ service.duration }}</div>
+                <div style="margin-top: 10px;">
+                    <span style="background: rgba(255,215,0,0.2); color: #FFD700; padding: 4px 8px; border-radius: 8px; font-size: 0.8rem;">
+                        {{ service.category|title }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.getElementById(tabName + 'Tab').style.display = 'block';
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

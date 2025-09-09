@@ -1,0 +1,233 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+{% if is_birthday %}
+<div class="birthday-banner">
+    <h2>🎂 Feliz Aniversário, {{ user.name }}! 🎂</h2>
+    <p>Hoje você tem 10% de desconto em todos os serviços!</p>
+</div>
+{% endif %}
+
+<div class="header">
+    <h1>👑 Dashboard - {{ user.name }}</h1>
+    <p>Bem-vindo de volta ao Salon Beleza Dourada</p>
+    <a href="/logout" class="btn btn-secondary" style="float: right;">Sair</a>
+</div>
+
+<div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('services')">Serviços</button>
+    <button class="nav-tab" onclick="showTab('bookings')">Meus Agendamentos</button>
+    <button class="nav-tab" onclick="showTab('book')">Agendar</button>
+</div>
+
+<div id="servicesTab" class="tab-content">
+    <div class="card">
+        <h3 style="color: #FFD700; margin-bottom: 20px;">Nossos Serviços</h3>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="filterServices('all')">Todos</button>
+            <button class="nav-tab" onclick="filterServices('manicure')">Manicure</button>
+            <button class="nav-tab" onclick="filterServices('alongamento')">Alongamentos</button>
+            <button class="nav-tab" onclick="filterServices('pedicure')">Pedicure</button>
+            <button class="nav-tab" onclick="filterServices('spa')">Spa & Tratamentos</button>
+            <button class="nav-tab" onclick="filterServices('podologia')">Podologia</button>
+        </div>
+        
+        <div class="services-grid" id="servicesGrid">
+            {% for service in services %}
+            <div class="service-card" data-category="{{ service.category }}">
+                {% if is_birthday %}
+                <div style="position: absolute; top: 10px; right: 10px; background: linear-gradient(135deg, #FFD700, #FFF8DC); color: #000; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">
+                    🎂 -10%
+                </div>
+                {% endif %}
+                
+                <div class="service-emoji">{{ service.image }}</div>
+                <div class="service-name">{{ service.name }}</div>
+                <div class="service-description">{{ service.description }}</div>
+                <div class="service-price">
+                    {% if is_birthday %}
+                        R$ {{ "%.2f"|format(service.price * 0.9) }}
+                        <span style="text-decoration: line-through; color: rgba(255,255,255,0.5); font-size: 1rem; margin-left: 10px;">
+                            R$ {{ "%.2f"|format(service.price) }}
+                        </span>
+                    {% else %}
+                        R$ {{ "%.2f"|format(service.price) }}
+                    {% endif %}
+                </div>
+                <div class="service-duration">⏱️ {{ service.duration }}</div>
+                <button class="btn" style="width: 100%; margin-top: 15px;" onclick="bookService({{ service.id }})">
+                    Agendar Agora
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="bookingsTab" class="tab-content" style="display: none;">
+    <div class="card">
+        <h3 style="color: #FFD700; margin-bottom: 20px;">Meus Agendamentos</h3>
+        
+        {% if bookings %}
+        <div class="grid">
+            {% for booking in bookings %}
+            <div class="card">
+                <div class="grid grid-3">
+                    <div>
+                        <strong style="color: #FFD700;">Serviço:</strong><br>
+                        {{ booking.service_name }}
+                    </div>
+                    <div>
+                        <strong style="color: #FFD700;">Data:</strong><br>
+                        {{ booking.date }} às {{ booking.time }}
+                    </div>
+                    <div>
+                        <strong style="color: #FFD700;">Valor:</strong><br>
+                        R$ {{ "%.2f"|format(booking.price) }}
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 8px; font-size: 0.8rem;">
+                        {{ booking.status|title }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: rgba(255,255,255,0.7);">
+            Você ainda não tem agendamentos. Que tal agendar um serviço?
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="bookTab" class="tab-content" style="display: none;">
+    <div class="card">
+        <h3 style="color: #FFD700; margin-bottom: 20px;">Agendar Serviço</h3>
+        
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="serviceSelect">Serviço:</label>
+                <select id="serviceSelect" class="form-control" required>
+                    <option value="">Selecione um serviço</option>
+                    {% for service in services %}
+                    <option value="{{ service.id }}" data-price="{{ service.price }}">
+                        {{ service.name }} - R$ {{ "%.2f"|format(service.price) }} ({{ service.duration }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label for="bookDate">Data:</label>
+                    <input type="date" id="bookDate" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookTime">Horário:</label>
+                    <select id="bookTime" class="form-control" required>
+                        <option value="">Selecione um horário</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group text-center">
+                <button type="submit" class="btn">Confirmar Agendamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(tabName) {
+    // Esconde todas as tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remove classe active de todas as nav-tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Mostra a tab selecionada
+    document.getElementById(tabName + 'Tab').style.display = 'block';
+    
+    // Adiciona classe active na nav-tab clicada
+    event.target.classList.add('active');
+}
+
+function filterServices(category) {
+    const cards = document.querySelectorAll('.service-card');
+    
+    cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Atualiza nav-tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+function bookService(serviceId) {
+    showTab('book');
+    document.getElementById('serviceSelect').value = serviceId;
+}
+
+// Set minimum date to today
+document.getElementById('bookDate').min = new Date().toISOString().split('T')[0];
+
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        service_id: parseInt(document.getElementById('serviceSelect').value),
+        date: document.getElementById('bookDate').value,
+        time: document.getElementById('bookTime').value
+    };
+    
+    try {
+        const response = await fetch('/api/book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Agendamento realizado com sucesso!', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(result.message, 'error');
+        }
+    } catch (error) {
+        showAlert('Erro ao agendar', 'error');
+    }
+});
+</script>
+{% endblock %}
