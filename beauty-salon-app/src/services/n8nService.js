@@ -1,12 +1,14 @@
 // Serviço de Integração N8n para Automação do Salão
 class N8nService {
   constructor() {
-    // URLs dos webhooks N8n (configurar na produção)
+    // URLs dos webhooks N8n (configuráveis via variáveis de ambiente)
+    const env = typeof process !== 'undefined' ? process.env : {};
+    this.baseUrl = env.REACT_APP_N8N_URL || 'https://n8n.automation.example.com';
     this.webhooks = {
-      booking: process.env.REACT_APP_N8N_BOOKING_WEBHOOK || 'https://demo-n8n.webhook.url/booking',
-      notification: process.env.REACT_APP_N8N_NOTIFICATION_WEBHOOK || 'https://demo-n8n.webhook.url/notification',
-      chat: process.env.REACT_APP_N8N_CHAT_WEBHOOK || 'https://demo-n8n.webhook.url/chat',
-      automation: process.env.REACT_APP_N8N_AUTOMATION_WEBHOOK || 'https://demo-n8n.webhook.url/automation'
+      booking: `${this.baseUrl}/webhook/salon-booking`,
+      notification: `${this.baseUrl}/webhook/salon-notification`,
+      analytics: `${this.baseUrl}/webhook/salon-analytics`,
+      automation: `${this.baseUrl}/webhook/salon-automation`
     };
   }
 
@@ -16,14 +18,14 @@ class N8nService {
       // Simular sucesso local quando N8n não está configurado
       if (!this.webhooks.booking || this.webhooks.booking.includes('demo-n8n')) {
         console.log('✅ Simulando automação N8n local - Agendamento processado');
-        return { 
-          success: true, 
-          data: { 
+        return {
+          success: true,
+          data: {
             message: 'Automação local ativa',
             bookingId: bookingData.id,
             actions: ['email_sent', 'calendar_updated', 'notification_sent']
           },
-          local: true 
+          local: true
         };
       }
 
@@ -81,11 +83,11 @@ class N8nService {
       }
     } catch (error) {
       console.log('📋 Automação N8n em modo local - Funcionalidade preservada');
-      return { 
-        success: true, 
-        data: { 
+      return {
+        success: true,
+        data: {
           message: 'Processamento local ativo',
-          local: true 
+          local: true
         }
       };
     }
@@ -129,8 +131,8 @@ class N8nService {
 
       if (response.ok) {
         const result = await response.json();
-        return { 
-          success: true, 
+        return {
+          success: true,
           reply: result.aiResponse || 'Obrigada pela sua mensagem! Nossa equipe responderá em breve.',
           actions: result.suggestedActions || []
         };
@@ -140,10 +142,10 @@ class N8nService {
     } catch (error) {
       console.warn('⚠️ Chat automático indisponível:', error);
       // Resposta padrão quando N8n não está disponível
-      return { 
-        success: false, 
+      return {
+        success: false,
         reply: 'Obrigada pela sua mensagem! Nossa equipe responderá em breve. Para agendamentos urgentes, ligue (11) 99999-9999.',
-        offline: true 
+        offline: true
       };
     }
   }
