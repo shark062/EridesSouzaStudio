@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoginForm from './components/Auth/LoginForm';
+import RegisterForm from './components/Auth/RegisterForm';
+import Header from './components/Layout/Header';
+import ClientDashboard from './components/Dashboard/ClientDashboard';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+function AppContent() {
+  const { user, isAdmin, loading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)',
+        color: '#FFD700',
+        fontSize: '1.5rem'
+      }}>
+        Carregando...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return showRegister ? (
+      <RegisterForm onSwitchToLogin={() => setShowRegister(false)} />
+    ) : (
+      <LoginForm onSwitchToRegister={() => setShowRegister(true)} />
+    );
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app-container">
+      <Header />
+      <main className="main-layout">
+        {isAdmin ? <AdminDashboard /> : <ClientDashboard />}
+      </main>
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+export default App;
