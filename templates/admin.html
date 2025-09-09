@@ -5,8 +5,56 @@
 <div class="header">
     <h1>👑 Painel Administrativo</h1>
     <p>Gestão completa do Salon Beleza Dourada</p>
-    <a href="/logout" class="btn btn-secondary" style="float: right;">Sair</a>
+    <div style="position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 15px;">
+        <div class="hamburger-menu" onclick="toggleAdminMenu()">
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+            <div class="hamburger-line"></div>
+        </div>
+        <a href="/logout" class="btn btn-secondary">Sair</a>
+    </div>
 </div>
+
+<!-- Menu Administrativo -->
+<div id="adminMenu" class="admin-dropdown-menu">
+    <div class="menu-section">
+        <h4>💰 Gestão de Serviços</h4>
+        <a href="#" onclick="openModal('editServices')">✏️ Editar Valores de Serviços</a>
+        <a href="#" onclick="openModal('addService')">➕ Adicionar Novo Serviço</a>
+        <a href="#" onclick="openModal('removeService')">➖ Remover Serviço</a>
+        <a href="#" onclick="openModal('editDuration')">⏰ Editar Tempo de Serviços</a>
+    </div>
+    
+    <div class="menu-section">
+        <h4>👥 Gestão de Clientes</h4>
+        <a href="#" onclick="openModal('editClients')">📝 Alterar Dados de Clientes</a>
+        <a href="#" onclick="openModal('clientHistory')">📋 Histórico de Clientes</a>
+    </div>
+    
+    <div class="menu-section">
+        <h4>📅 Gestão de Horários</h4>
+        <a href="#" onclick="openModal('scheduleBooking')">🕐 Marcar Horário Manual</a>
+        <a href="#" onclick="openModal('editSchedule')">⚙️ Editar Horários Disponíveis</a>
+        <a href="#" onclick="openModal('afterHours')">🌙 Agendamento Pós-Expediente</a>
+    </div>
+    
+    <div class="menu-section">
+        <h4>📢 Comunicação</h4>
+        <a href="#" onclick="openModal('whatsapp')">📱 Disparo WhatsApp</a>
+        <a href="#" onclick="openModal('email')">📧 Disparo E-mail</a>
+        <a href="#" onclick="openModal('notifications')">🔔 Programar Notificações</a>
+    </div>
+    
+    <div class="menu-section">
+        <h4>⭐ Avaliações & Feedback</h4>
+        <a href="#" onclick="openModal('ratings')">📊 Painel de Avaliações</a>
+        <a href="#" onclick="openModal('feedback')">💬 Feedback dos Clientes</a>
+        <a href="#" onclick="openModal('analytics')">📈 Análise de Satisfação</a>
+    </div>
+</div>
+
+<!-- Overlay -->
+<div id="menuOverlay" class="menu-overlay" onclick="closeAdminMenu()"></div>
 
 <div class="grid grid-4 mb-20">
     <div class="card text-center">
@@ -100,9 +148,488 @@
         </div>
     </div>
 </div>
+<!-- Modais para Funcionalidades Administrativas -->
+
+<!-- Modal Editar Valores de Serviços -->
+<div id="editServicesModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('editServices')">&times;</span>
+        <h3>💰 Editar Valores de Serviços</h3>
+        <div class="services-edit-list">
+            {% for service in services %}
+            <div class="service-edit-item">
+                <span>{{ service.name }}</span>
+                <input type="number" value="{{ service.price }}" step="0.01" onchange="updateServicePrice({{ service.id }}, this.value)">
+                <span>R$</span>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="btn btn-primary" onclick="saveServicePrices()">Salvar Alterações</button>
+    </div>
+</div>
+
+<!-- Modal Adicionar Serviço -->
+<div id="addServiceModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('addService')">&times;</span>
+        <h3>➕ Adicionar Novo Serviço</h3>
+        <form id="addServiceForm">
+            <input type="text" placeholder="Nome do Serviço" required>
+            <textarea placeholder="Descrição do Serviço" required></textarea>
+            <input type="number" placeholder="Preço (R$)" step="0.01" required>
+            <input type="text" placeholder="Duração (ex: 60 min)" required>
+            <input type="text" placeholder="Emoji/Ícone" required>
+            <select required>
+                <option value="">Selecione a Categoria</option>
+                <option value="manicure">Manicure</option>
+                <option value="pedicure">Pedicure</option>
+                <option value="alongamento">Alongamento</option>
+                <option value="spa">Spa</option>
+                <option value="podologia">Podologia</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Adicionar Serviço</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Duração -->
+<div id="editDurationModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('editDuration')">&times;</span>
+        <h3>⏰ Editar Tempo de Serviços</h3>
+        <div class="services-edit-list">
+            {% for service in services %}
+            <div class="service-edit-item">
+                <span>{{ service.name }}</span>
+                <input type="text" value="{{ service.duration }}" onchange="updateServiceDuration({{ service.id }}, this.value)">
+            </div>
+            {% endfor %}
+        </div>
+        <button class="btn btn-primary" onclick="saveServiceDurations()">Salvar Alterações</button>
+    </div>
+</div>
+
+<!-- Modal Editar Clientes -->
+<div id="editClientsModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('editClients')">&times;</span>
+        <h3>📝 Alterar Dados de Clientes</h3>
+        <div class="client-search">
+            <input type="text" placeholder="Buscar cliente..." onkeyup="searchClients(this.value)">
+        </div>
+        <div id="clientsList" class="clients-edit-list">
+            <!-- Lista de clientes será carregada dinamicamente -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agendar Manual -->
+<div id="scheduleBookingModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('scheduleBooking')">&times;</span>
+        <h3>🕐 Marcar Horário Manual</h3>
+        <form id="manualBookingForm">
+            <select required>
+                <option value="">Selecione o Cliente</option>
+                <!-- Clientes serão carregados dinamicamente -->
+            </select>
+            <select required>
+                <option value="">Selecione o Serviço</option>
+                {% for service in services %}
+                <option value="{{ service.id }}">{{ service.name }} - R$ {{ "%.2f"|format(service.price) }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" required>
+            <input type="time" required>
+            <textarea placeholder="Observações (opcional)"></textarea>
+            <button type="submit" class="btn btn-primary">Agendar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal WhatsApp -->
+<div id="whatsappModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('whatsapp')">&times;</span>
+        <h3>📱 Disparo WhatsApp</h3>
+        <div class="messaging-options">
+            <div class="message-type">
+                <input type="radio" name="whatsappType" value="reminder" checked>
+                <label>Lembrete de Agendamento</label>
+            </div>
+            <div class="message-type">
+                <input type="radio" name="whatsappType" value="promotion">
+                <label>Promoção/Oferta</label>
+            </div>
+            <div class="message-type">
+                <input type="radio" name="whatsappType" value="custom">
+                <label>Mensagem Personalizada</label>
+            </div>
+        </div>
+        <textarea placeholder="Digite sua mensagem..." rows="5"></textarea>
+        <div class="recipient-selection">
+            <input type="radio" name="recipients" value="all" checked>
+            <label>Todos os Clientes</label>
+            <input type="radio" name="recipients" value="specific">
+            <label>Clientes Específicos</label>
+        </div>
+        <button class="btn btn-primary" onclick="sendWhatsApp()">Enviar WhatsApp</button>
+    </div>
+</div>
+
+<!-- Modal E-mail -->
+<div id="emailModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('email')">&times;</span>
+        <h3>📧 Disparo E-mail</h3>
+        <form id="emailForm">
+            <input type="text" placeholder="Assunto do E-mail" required>
+            <textarea placeholder="Corpo do e-mail..." rows="8" required></textarea>
+            <div class="recipient-selection">
+                <input type="radio" name="emailRecipients" value="all" checked>
+                <label>Todos os Clientes</label>
+                <input type="radio" name="emailRecipients" value="specific">
+                <label>Clientes Específicos</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar E-mail</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Avaliações -->
+<div id="ratingsModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('ratings')">&times;</span>
+        <h3>📊 Painel de Avaliações</h3>
+        <div class="ratings-summary">
+            <div class="rating-card">
+                <h4>Média Geral</h4>
+                <div class="rating-stars">⭐⭐⭐⭐⭐ 4.8</div>
+            </div>
+            <div class="rating-card">
+                <h4>Total de Avaliações</h4>
+                <div class="rating-count">127 avaliações</div>
+            </div>
+        </div>
+        <div class="ratings-breakdown">
+            <div class="rating-bar">
+                <span>5 ⭐</span>
+                <div class="bar"><div class="fill" style="width: 85%"></div></div>
+                <span>85%</span>
+            </div>
+            <div class="rating-bar">
+                <span>4 ⭐</span>
+                <div class="bar"><div class="fill" style="width: 12%"></div></div>
+                <span>12%</span>
+            </div>
+            <div class="rating-bar">
+                <span>3 ⭐</span>
+                <div class="bar"><div class="fill" style="width: 2%"></div></div>
+                <span>2%</span>
+            </div>
+            <div class="rating-bar">
+                <span>2 ⭐</span>
+                <div class="bar"><div class="fill" style="width: 1%"></div></div>
+                <span>1%</span>
+            </div>
+            <div class="rating-bar">
+                <span>1 ⭐</span>
+                <div class="bar"><div class="fill" style="width: 0%"></div></div>
+                <span>0%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Feedback -->
+<div id="feedbackModal" class="admin-modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('feedback')">&times;</span>
+        <h3>💬 Feedback dos Clientes</h3>
+        <div class="feedback-list">
+            <div class="feedback-item">
+                <div class="feedback-header">
+                    <strong>Maria Silva</strong>
+                    <span class="feedback-date">15/01/2024</span>
+                    <div class="feedback-rating">⭐⭐⭐⭐⭐</div>
+                </div>
+                <p>"Serviço excelente! Amei o resultado da manicure."</p>
+            </div>
+            <div class="feedback-item">
+                <div class="feedback-header">
+                    <strong>Ana Costa</strong>
+                    <span class="feedback-date">14/01/2024</span>
+                    <div class="feedback-rating">⭐⭐⭐⭐⭐</div>
+                </div>
+                <p>"Profissionais muito atenciosas e ambiente acolhedor."</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* Menu Hamburger */
+.hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.hamburger-menu:hover {
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.hamburger-line {
+    width: 20px;
+    height: 2px;
+    background: #FFD700;
+    margin: 2px 0;
+    transition: 0.3s;
+}
+
+/* Menu Dropdown */
+.admin-dropdown-menu {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.menu-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.menu-section:last-child {
+    border-bottom: none;
+}
+
+.menu-section h4 {
+    color: #FFD700;
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.menu-section a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    margin: 4px 0;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.menu-section a:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: #FFD700;
+    transform: translateX(5px);
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+}
+
+/* Modais */
+.admin-modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    color: white;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.close {
+    color: #FFD700;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: white;
+}
+
+.modal-content h3 {
+    color: #FFD700;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 10px;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+}
+
+.modal-content input::placeholder,
+.modal-content textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.service-edit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 215, 0, 0.05);
+    border-radius: 8px;
+}
+
+.service-edit-item span:first-child {
+    flex: 1;
+    color: #FFD700;
+}
+
+.service-edit-item input {
+    width: 100px;
+    margin: 0;
+}
+
+.message-type,
+.recipient-selection {
+    margin: 10px 0;
+}
+
+.message-type label,
+.recipient-selection label {
+    margin-left: 8px;
+    color: white;
+}
+
+.ratings-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.rating-card {
+    background: rgba(255, 215, 0, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.rating-card h4 {
+    color: #FFD700;
+    margin: 0 0 10px 0;
+}
+
+.rating-stars {
+    font-size: 1.5rem;
+    color: #FFD700;
+}
+
+.rating-count {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: bold;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+}
+
+.bar {
+    flex: 1;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    background: #FFD700;
+    transition: width 0.3s ease;
+}
+
+.feedback-item {
+    background: rgba(255, 215, 0, 0.05);
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border-left: 3px solid #FFD700;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.feedback-date {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+.feedback-rating {
+    color: #FFD700;
+}
+</style>
+
 <script>
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => {
@@ -115,6 +642,110 @@ function showTab(tabName) {
     
     document.getElementById(tabName + 'Tab').style.display = 'block';
     event.target.classList.add('active');
+}
+
+function toggleAdminMenu() {
+    const menu = document.getElementById('adminMenu');
+    const overlay = document.getElementById('menuOverlay');
+    
+    if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+        overlay.style.display = 'block';
+    } else {
+        menu.style.display = 'none';
+        overlay.style.display = 'none';
+    }
+}
+
+function closeAdminMenu() {
+    document.getElementById('adminMenu').style.display = 'none';
+    document.getElementById('menuOverlay').style.display = 'none';
+}
+
+function openModal(modalName) {
+    closeAdminMenu();
+    document.getElementById(modalName + 'Modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalName) {
+    document.getElementById(modalName + 'Modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Funcionalidades dos modais
+function updateServicePrice(serviceId, newPrice) {
+    // Implementar atualização de preço
+    console.log(`Atualizando preço do serviço ${serviceId} para ${newPrice}`);
+}
+
+function saveServicePrices() {
+    alert('Preços salvos com sucesso!');
+    closeModal('editServices');
+}
+
+function updateServiceDuration(serviceId, newDuration) {
+    // Implementar atualização de duração
+    console.log(`Atualizando duração do serviço ${serviceId} para ${newDuration}`);
+}
+
+function saveServiceDurations() {
+    alert('Durações salvas com sucesso!');
+    closeModal('editDuration');
+}
+
+function searchClients(query) {
+    // Implementar busca de clientes
+    console.log(`Buscando clientes: ${query}`);
+}
+
+function sendWhatsApp() {
+    alert('WhatsApp enviado com sucesso!');
+    closeModal('whatsapp');
+}
+
+// Event listeners para formulários
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar Serviço
+    const addServiceForm = document.getElementById('addServiceForm');
+    if (addServiceForm) {
+        addServiceForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Serviço adicionado com sucesso!');
+            closeModal('addService');
+        });
+    }
+
+    // Agendamento Manual
+    const manualBookingForm = document.getElementById('manualBookingForm');
+    if (manualBookingForm) {
+        manualBookingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Agendamento realizado com sucesso!');
+            closeModal('scheduleBooking');
+        });
+    }
+
+    // Envio de E-mail
+    const emailForm = document.getElementById('emailForm');
+    if (emailForm) {
+        emailForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('E-mail enviado com sucesso!');
+            closeModal('email');
+        });
+    }
+});
+
+// Fechar modal ao clicar fora
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.admin-modal');
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
 }
 </script>
 {% endblock %}
