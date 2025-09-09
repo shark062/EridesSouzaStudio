@@ -8,7 +8,7 @@ import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'beauty_salon_secret_key_2024'
-CORS(app, origins=["http://localhost:5000", "http://0.0.0.0:5000"])
+CORS(app, origins=["http://localhost:5000", "http://0.0.0.0:5000", "https://*.replit.dev", "https://*.repl.co"])
 
 # Dados em memória para demonstração
 users_db = []
@@ -125,4 +125,4 @@ def api_bookings():
     return jsonify(bookings_db)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(host='127.0.0.1', port=3000, debug=True)
