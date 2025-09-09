@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
+import n8nService from '../../services/n8nService';
 
 const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
   const [formData, setFormData] = useState({
@@ -99,7 +100,23 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
       stats[user.id].lastVisit = new Date().toISOString();
       localStorage.setItem('userStats', JSON.stringify(stats));
 
-      setMessage('Agendamento realizado com sucesso! 🎉');
+      // 🤖 AUTOMAÇÃO N8N - Processar novo agendamento
+      try {
+        const automationResult = await n8nService.automate_newBooking(booking, user);
+        
+        if (automationResult.booking?.success) {
+          setMessage('Agendamento realizado com sucesso! 🎉\n\n✅ Confirmação enviada por email\n✅ Lembrete programado via WhatsApp\n✅ Profissional notificado');
+        } else {
+          setMessage('Agendamento realizado com sucesso! 🎉\n\n📧 Confirmação será enviada em breve');
+        }
+        
+        console.log('🚀 Automações N8n ativadas:', automationResult);
+        
+      } catch (error) {
+        console.warn('⚠️ Automação N8n indisponível:', error);
+        setMessage('Agendamento realizado com sucesso! 🎉');
+      }
+      
       setFormData({
         serviceId: '',
         date: '',
@@ -109,7 +126,7 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
 
       setTimeout(() => {
         onBookingComplete();
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
       setMessage('Erro ao agendar. Tente novamente.');
