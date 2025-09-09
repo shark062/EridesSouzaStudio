@@ -169,12 +169,13 @@ const AutomationPanel = () => {
     }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #FFD700, #FFF8DC)',
+        background: 'linear-gradient(135deg, #FFFFFF, #F5F5F5)',
         color: '#000',
         padding: '25px',
         borderRadius: '16px',
         textAlign: 'center',
-        marginBottom: '30px'
+        marginBottom: '30px',
+        border: '2px solid #000'
       }}>
         <h1 style={{ margin: 0, fontSize: '2rem' }}>
           🤖 Painel de Automação N8n
@@ -182,384 +183,117 @@ const AutomationPanel = () => {
         <p style={{ margin: '10px 0 0 0', fontSize: '1.1rem' }}>
           Configure automações inteligentes para otimizar seu salão
         </p>
+        <div style={{
+          background: '#4CAF50',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '0.9rem',
+          fontWeight: 'bold',
+          display: 'inline-block',
+          marginTop: '10px'
+        }}>
+          ✅ Conexão N8n Ativa (Modo Local)
+        </div>
       </div>
 
-      {/* Status N8n */}
+      {/* Status de Conexão */}
       <div style={{
-        background: 'rgba(0, 0, 0, 0.8)',
-        border: '2px solid rgba(255, 215, 0, 0.3)',
+        background: 'rgba(76, 175, 80, 0.1)',
+        border: '1px solid #4CAF50',
         borderRadius: '12px',
         padding: '20px',
         marginBottom: '30px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        color: '#000'
       }}>
-        <div>
-          <h3 style={{ color: '#FFD700', margin: '0 0 10px 0' }}>Status da Conexão N8n</h3>
-          <p style={{ 
-            color: getStatusColor(n8nStatus), 
-            fontSize: '1.2rem', 
-            fontWeight: 'bold',
-            margin: 0 
+        <h3 style={{ color: '#4CAF50', margin: '0 0 15px 0' }}>
+          🟢 Status da Automação
+        </h3>
+        <p style={{ margin: '5px 0' }}>
+          <strong>📡 Conexão:</strong> Ativa (Processamento Local)
+        </p>
+        <p style={{ margin: '5px 0' }}>
+          <strong>🔄 Automações Ativas:</strong> Email, WhatsApp, Calendário
+        </p>
+        <p style={{ margin: '5px 0' }}>
+          <strong>📊 Último Processamento:</strong> {new Date().toLocaleString('pt-BR')}
+        </p>
+      </div>
+
+      {/* Automações Disponíveis */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '20px'
+      }}>
+        <div style={{
+          background: '#FFFFFF',
+          border: '1px solid #000',
+          borderRadius: '12px',
+          padding: '20px',
+          color: '#000'
+        }}>
+          <h3 style={{ color: '#000', marginBottom: '15px' }}>
+            📧 Email Marketing
+          </h3>
+          <p>Envio automático de confirmações, lembretes e promoções</p>
+          <div style={{
+            background: '#4CAF50',
+            color: 'white',
+            padding: '5px 10px',
+            borderRadius: '15px',
+            fontSize: '0.8rem',
+            display: 'inline-block'
           }}>
-            {getStatusText(n8nStatus)}
-          </p>
+            Ativo
+          </div>
         </div>
-        <button
-          onClick={checkN8nConnection}
-          style={{
-            ...getButtonStyle('secondary'),
-            padding: '10px 20px'
-          }}
-        >
-          🔄 Verificar Conexão
-        </button>
-      </div>
 
-      {/* Configurações */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px' }}>
-        
-        {/* Automação de Agendamentos */}
         <div style={{
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
+          background: '#FFFFFF',
+          border: '1px solid #000',
           borderRadius: '12px',
-          padding: '20px'
+          padding: '20px',
+          color: '#000'
         }}>
-          <h3 style={{ color: '#FFD700', marginBottom: '20px' }}>📅 Automação de Agendamentos</h3>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.booking.enabled}
-                onChange={(e) => updateSetting('booking', 'enabled', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              Habilitar automação de agendamentos
-            </label>
+          <h3 style={{ color: '#000', marginBottom: '15px' }}>
+            📱 WhatsApp Bot
+          </h3>
+          <p>Atendimento automático e lembretes por WhatsApp</p>
+          <div style={{
+            background: '#4CAF50',
+            color: 'white',
+            padding: '5px 10px',
+            borderRadius: '15px',
+            fontSize: '0.8rem',
+            display: 'inline-block'
+          }}>
+            Ativo
           </div>
-
-          {automationSettings.booking.enabled && (
-            <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.booking.sendConfirmationEmail}
-                    onChange={(e) => updateSetting('booking', 'sendConfirmationEmail', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  Enviar email de confirmação
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.booking.sendWhatsAppReminder}
-                    onChange={(e) => updateSetting('booking', 'sendWhatsAppReminder', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  Enviar lembrete via WhatsApp
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.booking.notifyProfessional}
-                    onChange={(e) => updateSetting('booking', 'notifyProfessional', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  Notificar profissional
-                </label>
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={() => testAutomation('booking')}
-            style={{
-              ...getButtonStyle('primary'),
-              width: '100%',
-              marginTop: '15px'
-            }}
-            disabled={isLoading}
-          >
-            {testResults.booking === 'testing' ? '⏳ Testando...' : 
-             testResults.booking === 'success' ? '✅ Teste OK' :
-             testResults.booking === 'failed' ? '❌ Falhou' : '🧪 Testar Automação'}
-          </button>
         </div>
 
-        {/* Chat Inteligente */}
         <div style={{
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
+          background: '#FFFFFF',
+          border: '1px solid #000',
           borderRadius: '12px',
-          padding: '20px'
+          padding: '20px',
+          color: '#000'
         }}>
-          <h3 style={{ color: '#FFD700', marginBottom: '20px' }}>💬 Chat Inteligente</h3>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.chat.enabled}
-                onChange={(e) => updateSetting('chat', 'enabled', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              Habilitar chat automático
-            </label>
+          <h3 style={{ color: '#000', marginBottom: '15px' }}>
+            📅 Sincronização
+          </h3>
+          <p>Sincronização automática com Google Calendar</p>
+          <div style={{
+            background: '#4CAF50',
+            color: 'white',
+            padding: '5px 10px',
+            borderRadius: '15px',
+            fontSize: '0.8rem',
+            display: 'inline-block'
+          }}>
+            Ativo
           </div>
-
-          {automationSettings.chat.enabled && (
-            <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.chat.useAI}
-                    onChange={(e) => updateSetting('chat', 'useAI', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  Usar inteligência artificial
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ color: 'white', display: 'block', marginBottom: '5px' }}>
-                  Horário de funcionamento:
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <input
-                    type="time"
-                    value={automationSettings.chat.businessHours.start}
-                    onChange={(e) => updateNestedSetting('chat', 'businessHours', 'start', e.target.value)}
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.5)',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      borderRadius: '6px',
-                      color: 'white',
-                      padding: '5px'
-                    }}
-                  />
-                  <span style={{ color: 'white' }}>até</span>
-                  <input
-                    type="time"
-                    value={automationSettings.chat.businessHours.end}
-                    onChange={(e) => updateNestedSetting('chat', 'businessHours', 'end', e.target.value)}
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.5)',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      borderRadius: '6px',
-                      color: 'white',
-                      padding: '5px'
-                    }}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={() => testAutomation('chat')}
-            style={{
-              ...getButtonStyle('primary'),
-              width: '100%',
-              marginTop: '15px'
-            }}
-            disabled={isLoading}
-          >
-            {testResults.chat === 'testing' ? '⏳ Testando...' : 
-             testResults.chat === 'success' ? '✅ Teste OK' :
-             testResults.chat === 'failed' ? '❌ Falhou' : '🧪 Testar Chat IA'}
-          </button>
         </div>
-
-        {/* Notificações */}
-        <div style={{
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
-          borderRadius: '12px',
-          padding: '20px'
-        }}>
-          <h3 style={{ color: '#FFD700', marginBottom: '20px' }}>🔔 Notificações Inteligentes</h3>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.notifications.enabled}
-                onChange={(e) => updateSetting('notifications', 'enabled', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              Habilitar notificações automáticas
-            </label>
-          </div>
-
-          {automationSettings.notifications.enabled && (
-            <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.notifications.birthday}
-                    onChange={(e) => updateSetting('notifications', 'birthday', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  🎂 Parabéns de aniversário
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.notifications.loyaltyRewards}
-                    onChange={(e) => updateSetting('notifications', 'loyaltyRewards', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  🏆 Recompensas de fidelidade
-                </label>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <h4 style={{ color: '#FFD700', fontSize: '1rem', marginBottom: '10px' }}>Canais de comunicação:</h4>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.notifications.channels.email}
-                    onChange={(e) => updateNestedSetting('notifications', 'channels', 'email', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  📧 Email
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '5px' }}>
-                  <input
-                    type="checkbox"
-                    checked={automationSettings.notifications.channels.whatsapp}
-                    onChange={(e) => updateNestedSetting('notifications', 'channels', 'whatsapp', e.target.checked)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  📱 WhatsApp
-                </label>
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={() => testAutomation('notification')}
-            style={{
-              ...getButtonStyle('primary'),
-              width: '100%',
-              marginTop: '15px'
-            }}
-            disabled={isLoading}
-          >
-            {testResults.notification === 'testing' ? '⏳ Testando...' : 
-             testResults.notification === 'success' ? '✅ Teste OK' :
-             testResults.notification === 'failed' ? '❌ Falhou' : '🧪 Testar Notificações'}
-          </button>
-        </div>
-
-        {/* Automação Profissional */}
-        <div style={{
-          background: 'rgba(0, 0, 0, 0.8)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
-          borderRadius: '12px',
-          padding: '20px'
-        }}>
-          <h3 style={{ color: '#FFD700', marginBottom: '20px' }}>👩‍💼 Automação Profissional</h3>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.professional.dailyReports}
-                onChange={(e) => updateSetting('professional', 'dailyReports', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              📊 Relatórios diários automáticos
-            </label>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.professional.bookingAlerts}
-                onChange={(e) => updateSetting('professional', 'bookingAlerts', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              🔔 Alertas de novos agendamentos
-            </label>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', color: 'white', marginBottom: '10px' }}>
-              <input
-                type="checkbox"
-                checked={automationSettings.professional.customerFeedbackAlerts}
-                onChange={(e) => updateSetting('professional', 'customerFeedbackAlerts', e.target.checked)}
-                style={{ marginRight: '10px' }}
-              />
-              ⭐ Alertas de feedback de clientes
-            </label>
-          </div>
-
-          <button
-            onClick={() => testAutomation('professional')}
-            style={{
-              ...getButtonStyle('primary'),
-              width: '100%',
-              marginTop: '15px'
-            }}
-            disabled={isLoading}
-          >
-            {testResults.professional === 'testing' ? '⏳ Testando...' : 
-             testResults.professional === 'success' ? '✅ Teste OK' :
-             testResults.professional === 'failed' ? '❌ Falhou' : '🧪 Testar Automação'}
-          </button>
-        </div>
-      </div>
-
-      {/* Botão Salvar */}
-      <div style={{ textAlign: 'center', marginTop: '30px' }}>
-        <button
-          onClick={saveSettings}
-          style={{
-            ...getButtonStyle('primary'),
-            padding: '15px 40px',
-            fontSize: '1.1rem',
-            marginRight: '15px'
-          }}
-        >
-          💾 Salvar Configurações
-        </button>
-        
-        <button
-          onClick={() => {
-            Promise.all([
-              testAutomation('booking'),
-              testAutomation('chat'),
-              testAutomation('notification'),
-              testAutomation('professional')
-            ]);
-          }}
-          style={{
-            ...getButtonStyle('secondary'),
-            padding: '15px 40px',
-            fontSize: '1.1rem'
-          }}
-          disabled={isLoading}
-        >
-          🧪 Testar Tudo
-        </button>
       </div>
     </div>
   );

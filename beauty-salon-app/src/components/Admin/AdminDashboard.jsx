@@ -10,6 +10,9 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [showModal, setShowModal] = useState(null);
+  const [formData, setFormData] = useState({});
   const [stats, setStats] = useState({
     todayBookings: 0,
     todayRevenue: 0,
@@ -144,15 +147,82 @@ const AdminDashboard = () => {
     );
   };
 
+  const toggleHamburgerMenu = () => {
+    setShowHamburgerMenu(!showHamburgerMenu);
+  };
+
+  const openModal = (type) => {
+    setShowModal(type);
+    setShowHamburgerMenu(false);
+    setFormData({});
+  };
+
+  const closeModal = () => {
+    setShowModal(null);
+    setFormData({});
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    
+    switch(showModal) {
+      case 'changeAdminCredentials':
+        // Atualizar credenciais do admin
+        const adminUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedAdmins = adminUsers.map(user => 
+          user.role === 'admin' ? 
+          { ...user, name: formData.name || user.name, password: formData.password || user.password } : 
+          user
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedAdmins));
+        alert('Credenciais administrativas atualizadas com sucesso!');
+        break;
+        
+      case 'editClientData':
+        // Editar dados do cliente
+        const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedUsers = allUsers.map(user => 
+          user.id === formData.clientId ? { ...user, ...formData } : user
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
+        setClients(updatedUsers.filter(user => user.role !== 'admin'));
+        alert('Dados do cliente atualizados com sucesso!');
+        break;
+        
+      case 'manageBookings':
+        // Gerenciar agendamentos
+        const allBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+        const updatedBookings = allBookings.map(booking => 
+          booking.id === formData.bookingId ? { ...booking, status: formData.status } : booking
+        );
+        localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+        setBookings(updatedBookings);
+        calculateStats(updatedBookings, clients);
+        alert('Agendamento atualizado com sucesso!');
+        break;
+        
+      case 'changeTheme':
+        // Alterar tema para branco
+        document.documentElement.style.setProperty('--primary-color', '#FFFFFF');
+        document.documentElement.style.setProperty('--secondary-color', '#000000');
+        localStorage.setItem('theme', 'white');
+        alert('Tema alterado para branco com sucesso!');
+        break;
+    }
+    
+    closeModal();
+  };
+
   return (
     <div className="dashboard-container">
       <div style={{ 
-        background: 'linear-gradient(135deg, #FFD700, #FFF8DC)',
+        background: 'linear-gradient(135deg, #FFFFFF, #F5F5F5)',
         color: '#000',
         padding: '25px',
         borderRadius: '16px',
         textAlign: 'center',
-        marginBottom: '30px'
+        marginBottom: '30px',
+        position: 'relative'
       }}>
         <h1 style={{ margin: 0, fontSize: '2rem' }}>
           👑 Painel Administrativo - {user.name}
@@ -160,7 +230,370 @@ const AdminDashboard = () => {
         <p style={{ margin: '10px 0 0 0', fontSize: '1.1rem' }}>
           Gestão completa do Salon Beleza Dourada
         </p>
+        
+        {/* Menu Hambúrguer */}
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px'
+        }}>
+          <div 
+            onClick={toggleHamburgerMenu}
+            style={{
+              cursor: 'pointer',
+              padding: '10px',
+              background: '#000',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}
+          >
+            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
+            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
+            <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
+          </div>
+          
+          {/* Menu Dropdown */}
+          {showHamburgerMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: '0',
+              background: '#FFFFFF',
+              border: '2px solid #000',
+              borderRadius: '12px',
+              minWidth: '280px',
+              padding: '20px',
+              zIndex: 1000,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+            }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#000', borderBottom: '1px solid #000', paddingBottom: '10px' }}>
+                ⚙️ Configurações
+              </h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button
+                  onClick={() => openModal('changeAdminCredentials')}
+                  style={{
+                    padding: '12px',
+                    background: 'transparent',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#000',
+                    textAlign: 'left'
+                  }}
+                >
+                  🔐 Alterar Usuário e Senha Admin
+                </button>
+                
+                <button
+                  onClick={() => openModal('editClientData')}
+                  style={{
+                    padding: '12px',
+                    background: 'transparent',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#000',
+                    textAlign: 'left'
+                  }}
+                >
+                  👤 Corrigir Dados de Usuários
+                </button>
+                
+                <button
+                  onClick={() => openModal('manageBookings')}
+                  style={{
+                    padding: '12px',
+                    background: 'transparent',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#000',
+                    textAlign: 'left'
+                  }}
+                >
+                  📅 Gerenciar Agendamentos
+                </button>
+                
+                <button
+                  onClick={() => openModal('changeTheme')}
+                  style={{
+                    padding: '12px',
+                    background: 'transparent',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#000',
+                    textAlign: 'left'
+                  }}
+                >
+                  🎨 Alterar Logo para Branco
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Modais */}
+      {showModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            padding: '30px',
+            borderRadius: '16px',
+            minWidth: '400px',
+            maxWidth: '600px',
+            color: '#000'
+          }}>
+            {showModal === 'changeAdminCredentials' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>🔐 Alterar Credenciais Admin</h2>
+                <input
+                  type="text"
+                  placeholder="Novo nome do administrador"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="password"
+                  placeholder="Nova senha"
+                  value={formData.password || ''}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Salvar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'editClientData' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>👤 Editar Dados do Cliente</h2>
+                <select
+                  value={formData.clientId || ''}
+                  onChange={(e) => setFormData({...formData, clientId: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar cliente</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>{client.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Novo nome"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="email"
+                  placeholder="Novo email"
+                  value={formData.email || ''}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="tel"
+                  placeholder="Novo telefone"
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Salvar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'manageBookings' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>📅 Gerenciar Agendamentos</h2>
+                <select
+                  value={formData.bookingId || ''}
+                  onChange={(e) => setFormData({...formData, bookingId: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar agendamento</option>
+                  {bookings.map(booking => (
+                    <option key={booking.id} value={booking.id}>
+                      {booking.serviceName} - {formatDate(booking.date)} {booking.time}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={formData.status || ''}
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Novo status</option>
+                  <option value="pending">Pendente</option>
+                  <option value="confirmed">Confirmado</option>
+                  <option value="completed">Concluído</option>
+                  <option value="cancelled">Cancelado</option>
+                </select>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Atualizar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'changeTheme' && (
+              <div>
+                <h2 style={{ marginBottom: '20px' }}>🎨 Alterar Tema</h2>
+                <p style={{ marginBottom: '20px' }}>
+                  Tem certeza que deseja alterar a logo e tema para branco?
+                  Isso removerá o gradiente preto e dourado atual.
+                </p>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={handleFormSubmit} style={{
+                    padding: '12px 20px',
+                    background: '#000',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Confirmar
+                  </button>
+                  <button onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Estatísticas */}
       <div className="stats-grid">
