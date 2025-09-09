@@ -74,20 +74,14 @@
 .primary-text {
   font-size: 1.4rem;
   font-weight: bold;
-  background: linear-gradient(135deg, #FFD700 0%, #000000 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFFFFF;
   letter-spacing: 2px;
 }
 
 .secondary-text {
   font-size: 1rem;
   font-weight: 500;
-  background: linear-gradient(135deg, #000000 0%, #FFD700 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #FFFFFF;
   letter-spacing: 4px;
   margin-top: -2px;
 }
