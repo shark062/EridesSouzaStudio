@@ -5,7 +5,7 @@ modules = ["python-3.11"]
 expertMode = true
 
 [workflows]
-runButton = "Beauty Salon Python"
+runButton = "Salon App"
 
 [[workflows.workflow]]
 name = "Beauty Salon Python"
@@ -18,6 +18,15 @@ waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow]]
+name = "Salon App"
+author = 47382727
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
 
 [[ports]]
 localPort = 5000
