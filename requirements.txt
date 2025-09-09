@@ -6,3 +6,9 @@ flask
 requests
 requests
 requests
+flask
+flask-cors
+requests
+flask
+flask-cors
+requests

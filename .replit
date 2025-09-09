@@ -4,7 +4,7 @@ modules = ["python-3.11", "nodejs-20"]
 expertMode = true
 
 [workflows]
-runButton = "Flask + React"
+runButton = "Salon App Complete"
 
 [[workflows.workflow]]
 name = "Flask App"
@@ -48,6 +48,19 @@ args = "python app.py"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd beauty-salon-app && npm run dev -- --host 0.0.0.0 --port 5000"
+
+[[workflows.workflow]]
+name = "Salon App Complete"
+author = 47417256
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd beauty-salon-app && npm run dev"
 
 [[ports]]
 localPort = 3000
