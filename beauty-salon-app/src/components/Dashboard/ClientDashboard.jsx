@@ -5,6 +5,7 @@ import ServiceCard from '../Services/ServiceCard';
 import BookingForm from '../Booking/BookingForm';
 import RatingSystem from '../Rating/RatingSystem';
 import LoyaltySystem from '../Loyalty/LoyaltySystem';
+import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
 const ClientDashboard = () => {
@@ -95,6 +96,15 @@ const ClientDashboard = () => {
 
     // Carregar notificações
     loadNotifications();
+    
+    // Automação de aniversário N8n
+    if (isBirthday) {
+      n8nService.automate_birthdayReminder(user).then(result => {
+        if (result.success) {
+          console.log('🎉 Automação de aniversário ativada:', result);
+        }
+      }).catch(console.error);
+    }
     
     // Carregar mensagens do chat
     const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${user.id}`) || '[]');
@@ -202,20 +212,45 @@ const ClientDashboard = () => {
     localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
     setNewMessage('');
     
-    // Simular resposta automática (preparação para N8n)
-    setTimeout(() => {
-      const autoReply = {
-        id: Date.now() + 1,
-        text: 'Obrigada pela sua mensagem! Nossa equipe responderá em breve. Para agendamentos urgentes, ligue (11) 99999-9999.',
-        sender: 'admin',
-        time: new Date().toISOString(),
-        status: 'received'
-      };
-      
-      const newMessages = [...updatedMessages, autoReply];
-      setChatMessages(newMessages);
-      localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
-    }, 1000);
+    // Integração N8n para resposta automática inteligente
+    setTimeout(async () => {
+      try {
+        const aiResponse = await n8nService.sendChatMessage(newMessage, user.id, chatMessages);
+        
+        const autoReply = {
+          id: Date.now() + 1,
+          text: aiResponse.reply,
+          sender: 'admin',
+          time: new Date().toISOString(),
+          status: 'received',
+          isAI: !aiResponse.offline
+        };
+        
+        const newMessages = [...updatedMessages, autoReply];
+        setChatMessages(newMessages);
+        localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
+        
+        // Executar ações sugeridas pela IA (se houver)
+        if (aiResponse.actions && aiResponse.actions.length > 0) {
+          // Processar ações automáticas como agendamento, cancelamento, etc.
+          console.log('🤖 Ações sugeridas pela IA:', aiResponse.actions);
+        }
+      } catch (error) {
+        console.error('Erro na resposta automática:', error);
+        // Fallback para resposta padrão
+        const autoReply = {
+          id: Date.now() + 1,
+          text: 'Obrigada pela sua mensagem! Nossa equipe responderá em breve. Para agendamentos urgentes, ligue (11) 99999-9999.',
+          sender: 'admin',
+          time: new Date().toISOString(),
+          status: 'received'
+        };
+        
+        const newMessages = [...updatedMessages, autoReply];
+        setChatMessages(newMessages);
+        localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
+      }
+    }, 1500);
   };
 
   const getServiceHistory = () => {

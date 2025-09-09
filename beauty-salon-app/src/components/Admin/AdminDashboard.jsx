@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
+import AutomationPanel from './AutomationPanel';
+import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
 const AdminDashboard = () => {
@@ -190,7 +192,7 @@ const AdminDashboard = () => {
 
       {/* Navegação por abas */}
       <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['overview', 'bookings', 'clients', 'reports'].map(tab => (
+        {['overview', 'bookings', 'clients', 'reports', 'automation'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -204,6 +206,7 @@ const AdminDashboard = () => {
             {tab === 'bookings' && '📅 Agendamentos'}
             {tab === 'clients' && '👥 Clientes'}
             {tab === 'reports' && '📈 Relatórios'}
+            {tab === 'automation' && '🤖 Automação N8n'}
           </button>
         ))}
       </div>
@@ -416,6 +419,10 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === 'automation' && (
+        <AutomationPanel />
       )}
     </div>
   );
