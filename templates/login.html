@@ -20,8 +20,8 @@
                 <input type="password" id="password" class="form-control" required>
                 <div style="margin-top: 8px;">
                     <label for="showPassword" style="font-size: 14px; font-weight: normal; color: rgba(255,215,0,0.8); cursor: pointer;">
-                        <input type="checkbox" id="showPassword" onchange="togglePassword()" style="margin-right: 8px;">
-                        👁️ Mostrar senha
+                        <input type="checkbox" id="showPassword" style="margin-right: 8px;">
+                        <span>👁️ Mostrar senha</span>
                     </label>
                 </div>
             </div>
@@ -62,19 +62,24 @@ document.addEventListener('DOMContentLoaded', function() {
 function togglePassword() {
     const passwordField = document.getElementById('password');
     const showPasswordCheckbox = document.getElementById('showPassword');
-    const showPasswordLabel = document.querySelector('label[for="showPassword"]');
+    const labelSpan = showPasswordCheckbox.parentElement.querySelector('span');
     
     if (showPasswordCheckbox.checked) {
         passwordField.type = 'text';
-        showPasswordLabel.innerHTML = '<input type="checkbox" id="showPassword" onchange="togglePassword()" style="margin-right: 8px;" checked> 🙈 Ocultar senha';
+        labelSpan.textContent = '🙈 Ocultar senha';
     } else {
         passwordField.type = 'password';
-        showPasswordLabel.innerHTML = '<input type="checkbox" id="showPassword" onchange="togglePassword()" style="margin-right: 8px;"> 👁️ Mostrar senha';
+        labelSpan.textContent = '👁️ Mostrar senha';
     }
 }
 
-// Adicionar o evento de mudança ao checkbox
-document.getElementById('showPassword').addEventListener('change', togglePassword);
+// Adicionar o event listener quando o DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    const showPasswordCheckbox = document.getElementById('showPassword');
+    if (showPasswordCheckbox) {
+        showPasswordCheckbox.addEventListener('change', togglePassword);
+    }
+});
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();

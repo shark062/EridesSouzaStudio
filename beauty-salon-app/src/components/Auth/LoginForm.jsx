@@ -10,6 +10,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -69,16 +70,41 @@ const LoginForm = ({ onSwitchToRegister }) => {
 
           <div className="form-group">
             <label htmlFor="password">Senha</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Digite sua senha"
-              required
-              className="auth-input"
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Digite sua senha"
+                required
+                className="auth-input"
+              />
+              <div style={{ marginTop: '8px' }}>
+                <label 
+                  htmlFor="showPassword" 
+                  style={{ 
+                    fontSize: '14px', 
+                    fontWeight: 'normal', 
+                    color: 'rgba(255,215,0,0.8)', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    id="showPassword"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    style={{ margin: 0 }}
+                  />
+                  <span>{showPassword ? '🙈 Ocultar senha' : '👁️ Mostrar senha'}</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           {error && (
