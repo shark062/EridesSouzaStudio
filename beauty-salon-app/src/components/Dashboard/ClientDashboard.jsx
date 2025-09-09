@@ -3,6 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
 import ServiceCard from '../Services/ServiceCard';
 import BookingForm from '../Booking/BookingForm';
+import RatingSystem from '../Rating/RatingSystem';
+import LoyaltySystem from '../Loyalty/LoyaltySystem';
 import '../Layout/Layout.css';
 
 const ClientDashboard = () => {
@@ -148,7 +150,7 @@ const ClientDashboard = () => {
       </div>
 
       <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['services', 'bookings', 'schedule'].map(tab => (
+        {['services', 'bookings', 'schedule', 'loyalty'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -161,6 +163,7 @@ const ClientDashboard = () => {
             {tab === 'services' && '💅 Serviços'}
             {tab === 'bookings' && '📅 Meus Agendamentos'}
             {tab === 'schedule' && '⏰ Agendar'}
+            {tab === 'loyalty' && '🏆 Fidelidade'}
           </button>
         ))}
       </div>
@@ -210,6 +213,21 @@ const ClientDashboard = () => {
                         {booking.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                       </span>
                     </p>
+                    
+                    {/* Sistema de Avaliação para agendamentos passados */}
+                    {new Date(booking.date + 'T' + booking.time) < new Date() && booking.status === 'confirmed' && (
+                      <RatingSystem 
+                        bookingId={booking.id}
+                        serviceName={booking.serviceName}
+                        onRatingSubmit={() => {
+                          // Atualizar pontos de fidelidade
+                          const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
+                          if (!stats[user.id]) stats[user.id] = { loyaltyPoints: 0 };
+                          stats[user.id].loyaltyPoints += 5; // Bônus por avaliar
+                          localStorage.setItem('userStats', JSON.stringify(stats));
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               ))
@@ -248,6 +266,15 @@ const ClientDashboard = () => {
               setUserBookings(userBookings);
             }}
           />
+        </div>
+      )}
+
+      {activeTab === 'loyalty' && (
+        <div>
+          <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
+            🏆 Programa de Fidelidade
+          </h2>
+          <LoyaltySystem />
         </div>
       )}
     </div>
