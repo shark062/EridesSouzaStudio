@@ -502,6 +502,89 @@ def api_admin_bookings():
         save_data()
         return jsonify({'success': True, 'booking': booking})
 
+@app.route('/api/admin/change_credentials', methods=['POST'])
+def api_admin_change_credentials():
+    if 'user' not in session or session['user']['type'] != 'admin':
+        return jsonify({'success': False, 'message': 'Acesso negado'})
+
+    data = request.get_json()
+    new_username = data.get('new_username')
+    new_password = data.get('new_password')
+
+    if not new_username or not new_password:
+        return jsonify({'success': False, 'message': 'Username e senha são obrigatórios'})
+
+    # Atualiza credenciais do admin
+    global admin_credentials
+    admin_credentials['username'] = new_username
+    admin_credentials['password'] = new_password
+
+    # Atualiza a sessão
+    session['user']['name'] = new_username
+
+    return jsonify({'success': True, 'message': 'Credenciais do administrador atualizadas com sucesso'})
+
+@app.route('/api/user/update_profile', methods=['POST'])
+def api_user_update_profile():
+    if 'user' not in session:
+        return jsonify({'success': False, 'message': 'Usuário não logado'})
+
+    data = request.get_json()
+    user = session['user']
+    
+    if user['type'] == 'admin':
+        return jsonify({'success': False, 'message': 'Use a função de admin para alterar credenciais'})
+
+    current_username = user['username']
+    
+    # Verifica se o usuário existe
+    if current_username not in users_db:
+        return jsonify({'success': False, 'message': 'Usuário não encontrado'})
+
+    user_data = users_db[current_username]
+
+    # Atualiza os campos fornecidos
+    if data.get('new_password'):
+        user_data['password'] = data['new_password']
+    
+    if data.get('new_email'):
+        user_data['email'] = data['new_email']
+    
+    if data.get('new_name'):
+        user_data['name'] = data['new_name']
+    
+    if data.get('new_phone'):
+        user_data['phone'] = data['new_phone']
+
+    # Se o username mudou, precisa recriar a entrada no dicionário
+    if data.get('new_username') and data['new_username'] != current_username:
+        new_username = data['new_username']
+        
+        # Verifica se o novo username já existe
+        if new_username in users_db:
+            return jsonify({'success': False, 'message': 'Novo username já existe'})
+        
+        # Move os dados para o novo username
+        user_data['username'] = new_username
+        users_db[new_username] = user_data
+        del users_db[current_username]
+        
+        # Atualiza os agendamentos
+        for booking in bookings_db:
+            if booking.get('user_id') == user['id']:
+                booking['user_name'] = user_data['name']
+        
+        # Atualiza a sessão
+        session['user']['username'] = new_username
+        session['user']['name'] = user_data['name']
+    else:
+        # Atualiza apenas o nome na sessão se mudou
+        session['user']['name'] = user_data['name']
+
+    save_data()
+    
+    return jsonify({'success': True, 'message': 'Perfil atualizado com sucesso'})
+
 @app.route('/logout')
 def logout():
     session.pop('user', None)
