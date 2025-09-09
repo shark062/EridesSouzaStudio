@@ -303,6 +303,9 @@ def login():
         username = data.get('username')
         password = data.get('password')
 
+        print(f"Tentativa de login: username='{username}', password='{password}'")
+        print(f"Admin credentials: username='{admin_credentials['username']}', password='{admin_credentials['password']}'")
+
         # Primeiro verifica se é o administrador (credenciais fixas)
         if username == admin_credentials['username'] and password == admin_credentials['password']:
             session['user'] = {
@@ -310,14 +313,17 @@ def login():
                 'name': username,
                 'type': 'admin'
             }
+            print("Login admin bem-sucedido")
             return jsonify({'success': True, 'redirect': '/admin'})
 
         # Se não for admin, verifica usuários clientes
         user = users_db.get(username)
         if user and user['password'] == password:
             session['user'] = user
+            print(f"Login cliente bem-sucedido: {username}")
             return jsonify({'success': True, 'redirect': '/dashboard'})
         
+        print("Credenciais inválidas")
         return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'})
 
     return render_template('login.html')
@@ -370,8 +376,18 @@ def dashboard():
 
 @app.route('/admin')
 def admin():
-    if 'user' not in session or session['user']['type'] != 'admin':
+    print(f"Acessando /admin - Session: {session.get('user', 'Não existe')}")
+    
+    if 'user' not in session:
+        print("Usuário não está na sessão, redirecionando para login")
         return redirect(url_for('login'))
+    
+    user = session['user']
+    if user.get('type') != 'admin':
+        print(f"Usuário {user.get('name', 'desconhecido')} não é admin (tipo: {user.get('type', 'indefinido')})")
+        return redirect(url_for('login'))
+
+    print(f"Admin {user.get('name')} acessou o painel")
 
     # Estatísticas do admin
     today = datetime.now().date()
@@ -685,4 +701,6 @@ def static_files(filename):
 
 if __name__ == '__main__':
     load_data()
+    print(f"Aplicação iniciada. Credenciais admin: {admin_credentials}")
+    print(f"Usuários carregados: {len(users_db)}")
     app.run(host='0.0.0.0', port=3000, debug=True)

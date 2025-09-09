@@ -79,10 +79,20 @@ document.getElementById('showPassword').addEventListener('change', function() {
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (!username || !password) {
+        showAlert('Por favor, preencha todos os campos', 'error');
+        return;
+    }
+    
     const formData = {
-        username: document.getElementById('username').value,
-        password: document.getElementById('password').value
+        username: username,
+        password: password
     };
+    
+    console.log('Enviando dados de login:', formData);
     
     try {
         const response = await fetch('/login', {
@@ -93,17 +103,60 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify(formData)
         });
         
+        console.log('Status da resposta:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('Resultado do login:', result);
         
         if (result.success) {
+            console.log('Redirecionando para:', result.redirect);
             window.location.href = result.redirect;
         } else {
             showAlert(result.message, 'error');
         }
     } catch (error) {
         console.error('Erro no login:', error);
-        showAlert('Erro ao fazer login', 'error');
+        showAlert('Erro ao fazer login. Tente novamente.', 'error');
     }
 });
+
+// Função para mostrar alertas
+function showAlert(message, type) {
+    // Remove alertas existentes
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    // Cria novo alerta
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+        ${type === 'error' ? 'background-color: #dc3545;' : 'background-color: #28a745;'}
+    `;
+    alert.textContent = message;
+    
+    document.body.appendChild(alert);
+    
+    // Remove após 5 segundos
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
 </script>
 {% endblock %}
