@@ -785,13 +785,20 @@ def static_files(filename):
 if __name__ == '__main__':
     try:
         load_data()
-        print(f"Aplicação iniciada. Credenciais admin: {admin_credentials['username']}/****")
-        print(f"Usuários carregados: {len(users_db)}")
-        print(f"Agendamentos carregados: {len(bookings_db)}")
-        print("🌟 Salon Beleza Dourada - Sistema iniciado com sucesso!")
-        print("📍 Acesse: http://localhost:3000")
-        app.run(host='0.0.0.0', port=3000, debug=True)
+        print(f"✅ Aplicação iniciada. Credenciais admin: {admin_credentials['username']}/****")
+        print(f"✅ Usuários carregados: {len(users_db)}")
+        print(f"✅ Agendamentos carregados: {len(bookings_db)}")
+        print("🌟 Salon Beleza Dourada - Sistema Flask iniciado com sucesso!")
+        print("📍 Acesse o Flask app: http://0.0.0.0:3000")
+        print("📍 Acesse o React app: http://0.0.0.0:5000")
+        app.run(host='0.0.0.0', port=3000, debug=True, threaded=True)
     except Exception as e:
-        print(f"Erro ao iniciar a aplicação: {e}")
-        print("Tentando iniciar com configurações básicas...")
-        app.run(host='0.0.0.0', port=3000, debug=False)
+        print(f"❌ Erro ao iniciar a aplicação: {e}")
+        import traceback
+        traceback.print_exc()
+        print("🔄 Tentando iniciar com configurações básicas...")
+        try:
+            app.run(host='0.0.0.0', port=3000, debug=False, threaded=True)
+        except Exception as e2:
+            print(f"❌ Falha crítica: {e2}")
+            exit(1)

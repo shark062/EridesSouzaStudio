@@ -12,5 +12,8 @@ export default defineConfig({
     fs: {
       allow: ['..']
     }
+  },
+  define: {
+    global: 'globalThis',
   }
 })

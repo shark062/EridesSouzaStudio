@@ -19,16 +19,16 @@
             <div style="position: relative;">
                 <input type="password" id="password" class="form-control" required>
                 <div style="margin-top: 8px;">
-                    <label for="showPassword" style="font-size: 14px; font-weight: normal; color: rgba(255,215,0,0.8); cursor: pointer;">
-                        <input type="checkbox" id="showPassword" style="margin-right: 8px;">
-                        <span>👁️ Mostrar senha</span>
+                    <label for="showPassword" style="font-size: 14px; font-weight: normal; color: rgba(255,215,0,0.8); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="showPassword" style="margin: 0;">
+                        <span id="passwordToggleText">👁️ Mostrar senha</span>
                     </label>
                 </div>
             </div>
         </div>
         
         <div class="form-group text-center">
-            <button type="submit" class="btn">Entrar</button>
+            <button type="submit" class="btn" id="loginBtn">Entrar</button>
             <a href="/register" class="btn btn-secondary" style="margin-left: 10px;">Cadastrar</a>
         </div>
         
@@ -49,119 +49,141 @@
         <a href="/" style="color: #FFD700;">← Voltar ao início</a>
     </div>
 </div>
+
+<div id="alertContainer"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// Garantir que o checkbox sempre inicie desmarcado
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('showPassword').checked = false;
-});
-
-// Toggle para mostrar/ocultar senha
-function togglePassword() {
+    console.log('Script de login carregado');
+    
+    // Elementos
+    const showPasswordCheckbox = document.getElementById('showPassword');
     const passwordField = document.getElementById('password');
-    const showPasswordCheckbox = document.getElementById('showPassword');
-    const labelSpan = showPasswordCheckbox.parentElement.querySelector('span');
+    const passwordToggleText = document.getElementById('passwordToggleText');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
     
-    if (showPasswordCheckbox.checked) {
-        passwordField.type = 'text';
-        labelSpan.textContent = '🙈 Ocultar senha';
-    } else {
-        passwordField.type = 'password';
-        labelSpan.textContent = '👁️ Mostrar senha';
-    }
-}
-
-// Adicionar o event listener quando o DOM carregar
-document.addEventListener('DOMContentLoaded', function() {
-    const showPasswordCheckbox = document.getElementById('showPassword');
-    if (showPasswordCheckbox) {
-        showPasswordCheckbox.addEventListener('change', togglePassword);
-    }
-});
-
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+    // Garantir que o checkbox sempre inicie desmarcado
+    showPasswordCheckbox.checked = false;
     
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    
-    if (!username || !password) {
-        showAlert('Por favor, preencha todos os campos', 'error');
-        return;
-    }
-    
-    const formData = {
-        username: username,
-        password: password
-    };
-    
-    console.log('Enviando dados de login:', formData);
-    
-    try {
-        const response = await fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        console.log('Status da resposta:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('Resultado do login:', result);
-        
-        if (result.success) {
-            console.log('Redirecionando para:', result.redirect);
-            window.location.href = result.redirect;
+    // Toggle para mostrar/ocultar senha
+    function togglePassword() {
+        console.log('Toggle password executado');
+        if (showPasswordCheckbox.checked) {
+            passwordField.type = 'text';
+            passwordToggleText.textContent = '🙈 Ocultar senha';
         } else {
-            showAlert(result.message, 'error');
+            passwordField.type = 'password';
+            passwordToggleText.textContent = '👁️ Mostrar senha';
         }
-    } catch (error) {
-        console.error('Erro no login:', error);
-        showAlert('Erro ao fazer login. Tente novamente.', 'error');
     }
+    
+    // Event listener para o checkbox
+    showPasswordCheckbox.addEventListener('change', togglePassword);
+    
+    // Função para mostrar alertas
+    function showAlert(message, type) {
+        console.log('Mostrando alerta:', message, type);
+        
+        // Remove alertas existentes
+        const existingAlert = document.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        // Cria novo alerta
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 9999;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            ${type === 'error' ? 'background-color: #dc3545;' : 'background-color: #28a745;'}
+        `;
+        alert.textContent = message;
+        
+        document.body.appendChild(alert);
+        
+        // Remove após 5 segundos
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
+    
+    // Função de login
+    async function handleLogin(event) {
+        event.preventDefault();
+        console.log('Formulário de login submetido');
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        
+        if (!username || !password) {
+            showAlert('Por favor, preencha todos os campos', 'error');
+            return;
+        }
+        
+        // Desabilitar botão durante o processo
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Entrando...';
+        
+        const formData = {
+            username: username,
+            password: password
+        };
+        
+        console.log('Enviando dados de login:', { username: username, password: '****' });
+        
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            console.log('Status da resposta:', response.status);
+            
+            const result = await response.json();
+            console.log('Resultado do login:', result);
+            
+            if (result.success) {
+                showAlert(result.message, 'success');
+                console.log('Redirecionando para:', result.redirect);
+                
+                // Aguarda um pouco antes de redirecionar para mostrar o alerta
+                setTimeout(() => {
+                    window.location.href = result.redirect;
+                }, 1000);
+            } else {
+                showAlert(result.message || 'Erro no login', 'error');
+            }
+        } catch (error) {
+            console.error('Erro no login:', error);
+            showAlert('Erro ao fazer login. Verifique sua conexão.', 'error');
+        } finally {
+            // Reabilitar botão
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Entrar';
+        }
+    }
+    
+    // Event listener para o formulário
+    loginForm.addEventListener('submit', handleLogin);
+    
+    console.log('Login script inicializado com sucesso');
 });
-
-// Função para mostrar alertas
-function showAlert(message, type) {
-    // Remove alertas existentes
-    const existingAlert = document.querySelector('.alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
-    
-    // Cria novo alerta
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 5px;
-        color: white;
-        font-weight: bold;
-        z-index: 9999;
-        animation: slideIn 0.3s ease-out;
-        ${type === 'error' ? 'background-color: #dc3545;' : 'background-color: #28a745;'}
-    `;
-    alert.textContent = message;
-    
-    document.body.appendChild(alert);
-    
-    // Remove após 5 segundos
-    setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 5000);
-}
 </script>
 {% endblock %}
