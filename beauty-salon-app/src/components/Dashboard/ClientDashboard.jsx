@@ -10,6 +10,11 @@ import '../Layout/Layout.css';
 const ClientDashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('services');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
   const [userBookings, setUserBookings] = useState([]);
   const [userStats, setUserStats] = useState({
     totalVisits: 0,
@@ -87,6 +92,13 @@ const ClientDashboard = () => {
     if (stats[user.id]) {
       setUserStats(stats[user.id]);
     }
+
+    // Carregar notificações
+    loadNotifications();
+    
+    // Carregar mensagens do chat
+    const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${user.id}`) || '[]');
+    setChatMessages(savedMessages);
   }, [user.id]);
 
   const getUpcomingBookings = () => {
@@ -112,6 +124,106 @@ const ClientDashboard = () => {
   };
 
   const isBirthday = checkBirthday();
+
+  const loadNotifications = () => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    const notifications = [];
+    
+    // Notificações de agendamentos próximos
+    const upcomingBookings = getUpcomingBookings();
+    upcomingBookings.forEach(booking => {
+      const bookingDate = new Date(booking.date + 'T' + booking.time);
+      const timeDiff = bookingDate - today;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      
+      if (hoursDiff <= 24 && hoursDiff > 0) {
+        notifications.push({
+          id: `booking_${booking.id}`,
+          type: 'reminder',
+          title: 'Agendamento Próximo',
+          message: `Você tem ${booking.serviceName} agendado para ${formatDate(booking.date)} às ${booking.time}`,
+          time: new Date().toISOString(),
+          read: false
+        });
+      }
+    });
+    
+    // Notificação de aniversário
+    if (isBirthday) {
+      notifications.push({
+        id: 'birthday',
+        type: 'birthday',
+        title: 'Feliz Aniversário! 🎉',
+        message: 'Aproveite seu desconto especial de 10% em todos os serviços hoje!',
+        time: new Date().toISOString(),
+        read: false
+      });
+    }
+    
+    // Notificações de pontos de fidelidade
+    if (userStats.loyaltyPoints >= userStats.nextReward) {
+      notifications.push({
+        id: 'loyalty_reward',
+        type: 'reward',
+        title: 'Parabéns! Você ganhou um prêmio! 🏆',
+        message: 'Seus pontos de fidelidade garantem um desconto especial!',
+        time: new Date().toISOString(),
+        read: false
+      });
+    }
+    
+    setNotifications(notifications);
+  };
+
+  const markNotificationAsRead = (notificationId) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notificationId ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  const sendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    const message = {
+      id: Date.now(),
+      text: newMessage,
+      sender: 'user',
+      time: new Date().toISOString(),
+      status: 'sent'
+    };
+    
+    const updatedMessages = [...chatMessages, message];
+    setChatMessages(updatedMessages);
+    localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
+    setNewMessage('');
+    
+    // Simular resposta automática (preparação para N8n)
+    setTimeout(() => {
+      const autoReply = {
+        id: Date.now() + 1,
+        text: 'Obrigada pela sua mensagem! Nossa equipe responderá em breve. Para agendamentos urgentes, ligue (11) 99999-9999.',
+        sender: 'admin',
+        time: new Date().toISOString(),
+        status: 'received'
+      };
+      
+      const newMessages = [...updatedMessages, autoReply];
+      setChatMessages(newMessages);
+      localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
+    }, 1000);
+  };
+
+  const getServiceHistory = () => {
+    const now = new Date();
+    return userBookings
+      .filter(booking => new Date(booking.date + 'T' + booking.time) < now && booking.status === 'completed')
+      .sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
+  };
 
   return (
     <div className="dashboard-container">
@@ -149,8 +261,250 @@ const ClientDashboard = () => {
         </div>
       </div>
 
+      {/* Barra de Notificações e Chat */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        padding: '15px',
+        background: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 215, 0, 0.3)'
+      }}>
+        <h2 style={{ color: '#FFD700', margin: 0 }}>Olá, {user.name}! 👋</h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Botão de Notificações */}
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            style={{
+              ...getButtonStyle('secondary'),
+              position: 'relative',
+              padding: '10px 15px'
+            }}
+          >
+            🔔 Notificações
+            {notifications.filter(n => !n.read).length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#FF4444',
+                color: 'white',
+                borderRadius: '50%',
+                width: '20px',
+                height: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.7rem',
+                fontWeight: 'bold'
+              }}>
+                {notifications.filter(n => !n.read).length}
+              </span>
+            )}
+          </button>
+          
+          {/* Botão do Chat */}
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            style={{
+              ...getButtonStyle('secondary'),
+              padding: '10px 15px'
+            }}
+          >
+            💬 Suporte
+          </button>
+        </div>
+      </div>
+
+      {/* Painel de Notificações */}
+      {showNotifications && (
+        <div style={{
+          background: 'rgba(0, 0, 0, 0.9)',
+          border: '2px solid #FFD700',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          maxHeight: '300px',
+          overflowY: 'auto'
+        }}>
+          <h3 style={{ color: '#FFD700', marginBottom: '15px' }}>🔔 Suas Notificações</h3>
+          {notifications.length > 0 ? (
+            notifications.map(notification => (
+              <div key={notification.id} style={{
+                background: notification.read ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 215, 0, 0.2)',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '10px',
+                border: notification.read ? '1px solid rgba(255, 215, 0, 0.3)' : '2px solid #FFD700'
+              }}>
+                <h4 style={{ 
+                  color: notification.type === 'birthday' ? '#FF69B4' : '#FFD700',
+                  margin: '0 0 5px 0',
+                  fontSize: '1rem'
+                }}>
+                  {notification.title}
+                </h4>
+                <p style={{ color: 'white', margin: '5px 0', fontSize: '0.9rem' }}>
+                  {notification.message}
+                </p>
+                <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  {new Date(notification.time).toLocaleString('pt-BR')}
+                </small>
+                {!notification.read && (
+                  <button
+                    onClick={() => markNotificationAsRead(notification.id)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#FFD700',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      marginLeft: '15px',
+                      fontSize: '0.8rem'
+                    }}
+                  >
+                    Marcar como lida
+                  </button>
+                )}
+              </div>
+            ))
+          ) : (
+            <p style={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+              Nenhuma notificação no momento
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Chat de Suporte */}
+      {chatOpen && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          width: '350px',
+          height: '450px',
+          background: 'rgba(0, 0, 0, 0.95)',
+          border: '2px solid #FFD700',
+          borderRadius: '16px',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {/* Cabeçalho do Chat */}
+          <div style={{
+            background: 'linear-gradient(135deg, #FFD700, #FFF8DC)',
+            color: '#000',
+            padding: '15px',
+            borderRadius: '14px 14px 0 0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <h4 style={{ margin: 0 }}>💬 Suporte - Erides Souza</h4>
+            <button
+              onClick={() => setChatOpen(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                color: '#000'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          
+          {/* Mensagens */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '15px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            {chatMessages.length > 0 ? (
+              chatMessages.map(message => (
+                <div key={message.id} style={{
+                  alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%'
+                }}>
+                  <div style={{
+                    background: message.sender === 'user' 
+                      ? 'linear-gradient(135deg, #FFD700, #FFF8DC)' 
+                      : 'rgba(255, 255, 255, 0.1)',
+                    color: message.sender === 'user' ? '#000' : '#FFF',
+                    padding: '10px 15px',
+                    borderRadius: message.sender === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    fontSize: '0.9rem'
+                  }}>
+                    {message.text}
+                  </div>
+                  <small style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.7rem',
+                    marginTop: '2px',
+                    display: 'block'
+                  }}>
+                    {new Date(message.time).toLocaleTimeString('pt-BR')}
+                  </small>
+                </div>
+              ))
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                color: 'rgba(255, 255, 255, 0.7)',
+                padding: '20px'
+              }}>
+                <p>👋 Olá! Como posso ajudá-la hoje?</p>
+                <p style={{ fontSize: '0.8rem' }}>Digite sua mensagem abaixo...</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Input de Mensagem */}
+          <div style={{
+            padding: '15px',
+            borderTop: '1px solid rgba(255, 215, 0, 0.3)',
+            display: 'flex',
+            gap: '10px'
+          }}>
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              placeholder="Digite sua mensagem..."
+              style={{
+                flex: 1,
+                padding: '10px',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '8px',
+                background: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                outline: 'none'
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              style={{
+                ...getButtonStyle('primary'),
+                padding: '10px 15px',
+                fontSize: '0.9rem'
+              }}
+            >
+              Enviar
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['services', 'bookings', 'schedule', 'loyalty'].map(tab => (
+        {['services', 'bookings', 'schedule', 'history', 'loyalty'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -161,8 +515,9 @@ const ClientDashboard = () => {
             }}
           >
             {tab === 'services' && '💅 Serviços'}
-            {tab === 'bookings' && '📅 Meus Agendamentos'}
+            {tab === 'bookings' && '📅 Agendamentos'}
             {tab === 'schedule' && '⏰ Agendar'}
+            {tab === 'history' && '📋 Histórico'}
             {tab === 'loyalty' && '🏆 Fidelidade'}
           </button>
         ))}
@@ -266,6 +621,131 @@ const ClientDashboard = () => {
               setUserBookings(userBookings);
             }}
           />
+        </div>
+      )}
+
+      {activeTab === 'history' && (
+        <div>
+          <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
+            📋 Histórico de Serviços
+          </h2>
+          <div className="dashboard-grid">
+            {getServiceHistory().length > 0 ? (
+              getServiceHistory().map(service => (
+                <div key={service.id} className="dashboard-card">
+                  <div className="card-header">
+                    <span className="card-icon">✨</span>
+                    <h3 className="card-title">{service.serviceName}</h3>
+                  </div>
+                  <div className="card-content">
+                    <p><strong>Data:</strong> {formatDate(service.date)}</p>
+                    <p><strong>Horário:</strong> {formatTime(service.time)}</p>
+                    <p><strong>Duração:</strong> {service.duration}</p>
+                    <p><strong>Valor Pago:</strong> R$ {service.price.toFixed(2)}</p>
+                    <p><strong>Status:</strong> 
+                      <span style={{ 
+                        color: '#4CAF50',
+                        fontWeight: 'bold',
+                        marginLeft: '5px'
+                      }}>
+                        Concluído ✓
+                      </span>
+                    </p>
+                    
+                    {/* Informações adicionais */}
+                    <div style={{
+                      marginTop: '15px',
+                      padding: '10px',
+                      background: 'rgba(255, 215, 0, 0.1)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 215, 0, 0.3)'
+                    }}>
+                      <p style={{ margin: '5px 0', fontSize: '0.9rem' }}>
+                        💰 <strong>Pontos Ganhos:</strong> {Math.floor(service.price / 5)} pts
+                      </p>
+                      <p style={{ margin: '5px 0', fontSize: '0.9rem' }}>
+                        🔄 <strong>Repetição:</strong> {service.repeat || 'Primeira vez'}
+                      </p>
+                      {service.notes && (
+                        <p style={{ margin: '5px 0', fontSize: '0.9rem' }}>
+                          📝 <strong>Observações:</strong> {service.notes}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Botão para reagendar */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('schedule');
+                        // Pre-selecionar o mesmo serviço
+                      }}
+                      style={{
+                        ...getButtonStyle('secondary'),
+                        marginTop: '10px',
+                        width: '100%',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      🔄 Reagendar Este Serviço
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="dashboard-card">
+                <div className="card-content" style={{ textAlign: 'center' }}>
+                  <h3>📋 Nenhum serviço no histórico</h3>
+                  <p>Seus serviços concluídos aparecerão aqui</p>
+                  <button
+                    onClick={() => setActiveTab('schedule')}
+                    style={getButtonStyle('primary')}
+                  >
+                    Agendar Primeiro Serviço
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Resumo de Estatísticas */}
+          {getServiceHistory().length > 0 && (
+            <div style={{
+              marginTop: '30px',
+              padding: '20px',
+              background: 'rgba(255, 215, 0, 0.1)',
+              borderRadius: '12px',
+              border: '2px solid rgba(255, 215, 0, 0.3)'
+            }}>
+              <h3 style={{ color: '#FFD700', textAlign: 'center', marginBottom: '20px' }}>
+                📊 Suas Estatísticas
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', color: '#FFD700' }}>{getServiceHistory().length}</div>
+                  <div style={{ color: 'white', fontSize: '0.9rem' }}>Serviços Realizados</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', color: '#FFD700' }}>
+                    R$ {getServiceHistory().reduce((sum, s) => sum + s.price, 0).toFixed(2)}
+                  </div>
+                  <div style={{ color: 'white', fontSize: '0.9rem' }}>Total Investido</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', color: '#FFD700' }}>
+                    {getServiceHistory().reduce((sum, s) => sum + Math.floor(s.price / 5), 0)}
+                  </div>
+                  <div style={{ color: 'white', fontSize: '0.9rem' }}>Pontos Acumulados</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', color: '#FFD700' }}>
+                    {getServiceHistory().length > 0 ? 
+                      Math.round(getServiceHistory().reduce((sum, s) => sum + s.price, 0) / getServiceHistory().length) : 0}
+                  </div>
+                  <div style={{ color: 'white', fontSize: '0.9rem' }}>Ticket Médio</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
