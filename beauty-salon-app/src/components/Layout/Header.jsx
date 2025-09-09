@@ -9,7 +9,15 @@ const Header = () => {
     <header className="app-header">
       <div className="header-content">
         <div className="logo-section">
-          <h1 className="logo">✨ Salon Beleza Dourada</h1>
+          <div className="brand-logo">
+            <div className="logo-symbol">
+              <div className="pr-letters">PR</div>
+            </div>
+            <h1 className="logo-text">
+              <span className="primary-text">ERIDES SOUZA</span>
+              <span className="secondary-text">ESTÚDIO</span>
+            </h1>
+          </div>
           {isAdmin && <span className="admin-badge">ADMIN</span>}
         </div>
         
