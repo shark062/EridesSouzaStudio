@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
@@ -78,7 +77,7 @@ const AdminDashboard = () => {
         image: '🎨'
       }
     ];
-    
+
     const savedServices = JSON.parse(localStorage.getItem('services') || JSON.stringify(defaultServices));
     setServices(savedServices);
   };
@@ -132,14 +131,14 @@ const AdminDashboard = () => {
       reader.onload = (e) => {
         const photoData = e.target.result;
         setProfilePhoto(photoData);
-        
+
         // Atualizar no localStorage
         const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         const updatedUsers = users.map(u => 
           u.id === user.id ? { ...u, profilePhoto: photoData } : u
         );
         localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-        
+
         alert('Foto de perfil atualizada com sucesso!');
       };
       reader.readAsDataURL(file);
@@ -148,7 +147,7 @@ const AdminDashboard = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    
+
     switch(showModal) {
       case 'changeAdminCredentials':
         // Alterar credenciais do admin
@@ -161,7 +160,7 @@ const AdminDashboard = () => {
         localStorage.setItem('registeredUsers', JSON.stringify(updatedAdmins));
         alert('Credenciais administrativas atualizadas com sucesso!');
         break;
-        
+
       case 'editClientData':
         // Editar dados do cliente
         const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
@@ -172,7 +171,7 @@ const AdminDashboard = () => {
         setClients(updatedUsers.filter(user => user.role !== 'admin'));
         alert('Dados do cliente atualizados com sucesso!');
         break;
-        
+
       case 'addService':
         // Adicionar novo serviço
         const newService = {
@@ -188,7 +187,7 @@ const AdminDashboard = () => {
         localStorage.setItem('services', JSON.stringify(updatedServices));
         alert('Serviço adicionado com sucesso!');
         break;
-        
+
       case 'editService':
         // Editar serviço existente
         const editedServices = services.map(service => 
@@ -200,7 +199,7 @@ const AdminDashboard = () => {
         localStorage.setItem('services', JSON.stringify(editedServices));
         alert('Serviço atualizado com sucesso!');
         break;
-        
+
       case 'removeService':
         // Remover serviço
         const filteredServices = services.filter(service => service.id !== parseInt(formData.serviceId));
@@ -208,7 +207,7 @@ const AdminDashboard = () => {
         localStorage.setItem('services', JSON.stringify(filteredServices));
         alert('Serviço removido com sucesso!');
         break;
-        
+
       case 'createBooking':
         // Criar novo agendamento
         const newBooking = {
@@ -231,7 +230,7 @@ const AdminDashboard = () => {
         calculateStats(updatedBookings, clients);
         alert('Agendamento criado com sucesso!');
         break;
-        
+
       case 'editBooking':
         // Editar agendamento
         const editedBookings = bookings.map(booking => 
@@ -245,7 +244,7 @@ const AdminDashboard = () => {
         alert('Agendamento atualizado com sucesso!');
         break;
     }
-    
+
     closeModal();
     loadData();
   };
@@ -258,12 +257,12 @@ const AdminDashboard = () => {
       '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
       '17:00', '17:30'
     ];
-    
+
     // Horários pós-expediente
     const afterHoursSlots = [
       '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00'
     ];
-    
+
     return [...regularSlots, ...afterHoursSlots];
   };
 
@@ -345,7 +344,7 @@ const AdminDashboard = () => {
             </p>
           </div>
         </div>
-        
+
         {/* Menu de Ações Rápidas */}
         <div style={{
           display: 'grid',
@@ -367,7 +366,7 @@ const AdminDashboard = () => {
           >
             🔐 Alterar Credenciais Admin
           </button>
-          
+
           <button
             onClick={() => openModal('addService')}
             style={{
@@ -382,7 +381,7 @@ const AdminDashboard = () => {
           >
             ➕ Adicionar Serviço
           </button>
-          
+
           <button
             onClick={() => openModal('createBooking')}
             style={{
@@ -397,7 +396,7 @@ const AdminDashboard = () => {
           >
             📅 Criar Agendamento
           </button>
-          
+
           <div>
             <label 
               htmlFor="adminPhotoUpload"
@@ -462,8 +461,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -475,8 +476,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -488,26 +491,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Salvar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -536,8 +542,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar cliente</option>
@@ -554,8 +562,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -567,8 +577,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -580,26 +592,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Salvar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -622,8 +637,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <textarea
@@ -635,8 +652,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -650,8 +669,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -664,8 +685,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -677,26 +700,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Adicionar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -718,8 +744,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <textarea
@@ -731,8 +759,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -745,8 +775,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -758,8 +790,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <input
@@ -771,26 +805,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Salvar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -811,8 +848,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar serviço para remover</option>
@@ -836,8 +875,8 @@ const AdminDashboard = () => {
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -858,8 +897,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar cliente</option>
@@ -875,8 +916,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar serviço</option>
@@ -895,8 +938,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <select
@@ -911,8 +956,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar horário</option>
@@ -931,26 +978,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Criar Agendamento
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -980,8 +1030,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar agendamento</option>
@@ -1002,8 +1054,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <select
@@ -1013,8 +1067,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Selecionar novo horário</option>
@@ -1031,8 +1087,10 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '15px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 >
                   <option value="">Alterar status</option>
@@ -1050,26 +1108,29 @@ const AdminDashboard = () => {
                     width: '100%',
                     padding: '12px',
                     marginBottom: '20px',
-                    border: '1px solid #000',
-                    borderRadius: '8px'
+                    border: '1px solid #FFD700',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#FFFFFF'
                   }}
                 />
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
-                    background: '#000',
-                    color: '#FFFFFF',
+                    background: '#FFD700',
+                    color: '#000',
                     border: 'none',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
                   }}>
                     Salvar Alterações
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
                     background: 'transparent',
-                    color: '#000',
-                    border: '1px solid #000',
+                    color: '#FFFFFF',
+                    border: '1px solid #FFD700',
                     borderRadius: '8px',
                     cursor: 'pointer'
                   }}>
@@ -1168,7 +1229,7 @@ const AdminDashboard = () => {
           <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
             💅 Gestão de Serviços
           </h2>
-          
+
           <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => openModal('addService')}
@@ -1197,7 +1258,7 @@ const AdminDashboard = () => {
               ❌ Remover Serviço
             </button>
           </div>
-          
+
           <div className="dashboard-grid">
             {services.map(service => (
               <div key={service.id} className="dashboard-card">
@@ -1236,7 +1297,7 @@ const AdminDashboard = () => {
           <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
             📅 Gestão de Agendamentos
           </h2>
-          
+
           <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => openModal('createBooking')}
@@ -1265,7 +1326,7 @@ const AdminDashboard = () => {
               ✏️ Editar Agendamento
             </button>
           </div>
-          
+
           <div style={{ overflowX: 'auto' }}>
             <table style={{
               width: '100%',
@@ -1334,7 +1395,7 @@ const AdminDashboard = () => {
           <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
             👥 Gestão de Clientes
           </h2>
-          
+
           <div style={{ marginBottom: '20px' }}>
             <button
               onClick={() => openModal('editClientData')}
@@ -1350,7 +1411,7 @@ const AdminDashboard = () => {
               ✏️ Editar Dados de Cliente
             </button>
           </div>
-          
+
           <div className="dashboard-grid">
             {clients.map(client => (
               <div key={client.id} className="dashboard-card">

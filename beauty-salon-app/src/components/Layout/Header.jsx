@@ -166,11 +166,12 @@ const Header = () => {
                 top: '100%',
                 right: '0',
                 marginTop: '10px',
-                background: '#FFFFFF',
+                background: 'rgba(0, 0, 0, 0.3)',
+                backdropFilter: 'blur(10px)',
                 minWidth: '280px',
                 borderRadius: '12px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
-                border: '2px solid #FFD700',
+                boxShadow: '0 8px 25px rgba(255, 215, 0, 0.2)',
+                border: '1px solid rgba(255, 215, 0, 0.4)',
                 zIndex: 1000,
                 padding: '20px'
               }}>
@@ -179,7 +180,7 @@ const Header = () => {
                   flexDirection: 'column',
                   gap: '12px'
                 }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#000', borderBottom: '1px solid #FFD700', paddingBottom: '10px' }}>
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700', borderBottom: '1px solid #FFD700', paddingBottom: '10px' }}>
                     ⚙️ Menu de Opções
                   </h3>
                   
@@ -191,11 +192,12 @@ const Header = () => {
                         display: 'block',
                         padding: '12px',
                         background: 'transparent',
-                        border: '1px solid #000',
+                        border: '1px solid #FFD700',
                         borderRadius: '8px',
                         cursor: 'pointer',
-                        color: '#000',
-                        textAlign: 'center'
+                        color: '#FFFFFF',
+                        textAlign: 'center',
+                        transition: 'all 0.3s ease'
                       }}
                     >
                       📸 Alterar Foto de Perfil
@@ -214,11 +216,12 @@ const Header = () => {
                     style={{
                       padding: '12px',
                       background: 'transparent',
-                      border: '1px solid #000',
+                      border: '1px solid #FFD700',
                       borderRadius: '8px',
                       cursor: 'pointer',
-                      color: '#000',
-                      textAlign: 'left'
+                      color: '#FFFFFF',
+                      textAlign: 'left',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     👤 Editar Meus Dados
@@ -229,11 +232,12 @@ const Header = () => {
                     style={{
                       padding: '12px',
                       background: 'transparent',
-                      border: '1px solid #000',
+                      border: '1px solid #FFD700',
                       borderRadius: '8px',
                       cursor: 'pointer',
-                      color: '#000',
-                      textAlign: 'left'
+                      color: '#FFFFFF',
+                      textAlign: 'left',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     🔐 Alterar Senha
@@ -242,7 +246,7 @@ const Header = () => {
                   {isAdmin && (
                     <>
                       <div style={{ borderTop: '1px solid #FFD700', marginTop: '10px', paddingTop: '10px' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#000', fontSize: '0.9rem' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '0.9rem' }}>
                           🛠️ Funções Administrativas
                         </h4>
                       </div>

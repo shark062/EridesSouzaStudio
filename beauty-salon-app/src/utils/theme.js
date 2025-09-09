@@ -49,9 +49,9 @@ export const theme = {
 };
 
 export const getCardStyle = (transparent = false) => ({
-  background: transparent ? theme.gradients.translucent : theme.gradients.card,
+  background: 'rgba(0, 0, 0, 0.3)',
   backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.colors.primary.gold}20`,
+  border: `1px solid ${theme.colors.primary.gold}40`,
   borderRadius: theme.borderRadius.medium,
   boxShadow: theme.shadows.soft,
   color: theme.colors.secondary.white
