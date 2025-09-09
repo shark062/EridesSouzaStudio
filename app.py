@@ -324,35 +324,68 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    try:
         data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
+        if not data:
+            return jsonify({'success': False, 'message': 'Dados não recebidos'}), 400
 
-        print(f"Tentativa de login: username='{username}', password='{password}'")
-        print(f"Admin credentials: username='{admin_credentials['username']}', password='{admin_credentials['password']}'")
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
 
-        # Primeiro verifica se é o administrador (credenciais fixas)
+        print(f"Tentativa de login - Usuário: '{username}'")
+        print(f"Admin username configurado: '{admin_credentials['username']}'")
+
+        if not username or not password:
+            return jsonify({'success': False, 'message': 'Usuário e senha são obrigatórios'})
+
+        # Verificar credenciais do admin (case-sensitive)
         if username == admin_credentials['username'] and password == admin_credentials['password']:
-            session['user'] = {
-                'id': 'admin',
-                'name': username,
-                'type': 'admin'
-            }
-            print("Login admin bem-sucedido")
-            return jsonify({'success': True, 'redirect': '/admin'})
+            session.clear()  # Limpar sessão anterior
+            session['user_id'] = 'admin'
+            session['username'] = username
+            session['is_admin'] = True
+            session['user_type'] = 'admin'
+            session.permanent = True
+            print("✅ Login admin realizado com sucesso")
+            save_data()
+            return jsonify({
+                'success': True, 
+                'message': 'Login administrativo realizado com sucesso!',
+                'redirect': '/admin',
+                'user_type': 'admin'
+            })
 
-        # Se não for admin, verifica usuários clientes
-        user = users_db.get(username)
-        if user and user['password'] == password:
-            session['user'] = user
-            print(f"Login cliente bem-sucedido: {username}")
-            return jsonify({'success': True, 'redirect': '/dashboard'})
-        
-        print("Credenciais inválidas")
-        return jsonify({'success': False, 'message': 'Usuário ou senha inválidos'})
+        # Verificar usuários regulares
+        if username in users_db:
+            user = users_db[username]
+            if user.get('password') == password:
+                session.clear()  # Limpar sessão anterior
+                session['user_id'] = username
+                session['username'] = username
+                session['is_admin'] = False
+                session['user_type'] = 'client'
+                session['user_data'] = user
+                session.permanent = True
+                print(f"✅ Login cliente realizado com sucesso: {username}")
+                save_data()
+                return jsonify({
+                    'success': True, 
+                    'message': f'Bem-vindo(a), {user.get("name", username)}!',
+                    'redirect': '/dashboard',
+                    'user_type': 'client'
+                })
 
-    return render_template('login.html')
+        print("❌ Credenciais inválidas")
+        return jsonify({'success': False, 'message': 'Usuário ou senha incorretos'})
+
+    except Exception as e:
+        print(f"❌ Erro no login: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': 'Erro interno do servidor'}), 500
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -385,10 +418,14 @@ def register():
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
+    if 'user_id' not in session or session['user_type'] != 'client':
         return redirect(url_for('login'))
 
-    user = session['user']
+    user_id = session['user_id']
+    user = users_db.get(user_id)
+    if not user:
+        return redirect(url_for('login'))
+
     user_bookings = [b for b in bookings_db if b.get('user_id') == user['id']]
 
     # Verifica se é aniversário
@@ -402,22 +439,19 @@ def dashboard():
 
 @app.route('/admin')
 def admin():
-    print(f"Acessando /admin - Session: {session.get('user', 'Não existe')}")
-    
-    if 'user' not in session:
-        print("Usuário não está na sessão, redirecionando para login")
-        return redirect(url_for('login'))
-    
-    user = session['user']
-    if user.get('type') != 'admin':
-        print(f"Usuário {user.get('name', 'desconhecido')} não é admin (tipo: {user.get('type', 'indefinido')})")
+    print(f"Acessando /admin - Session: {session.get('user_type', 'Não definido')}")
+
+    if 'user_type' not in session or session['user_type'] != 'admin':
+        print("Usuário não é admin ou não está logado, redirecionando para login")
         return redirect(url_for('login'))
 
-    print(f"Admin {user.get('name')} acessou o painel")
+    user = session.get('user_data')
+    admin_username = session.get('username')
+    print(f"Admin {admin_username} acessou o painel")
 
     # Estatísticas do admin
     today = datetime.now().date()
-    today_bookings = [b for b in bookings_db if b.get('date') == today.isoformat()]
+    today_bookings = [b for b in bookings_db if datetime.strptime(b.get('date'), '%Y-%m-%d').date() == today]
 
     stats = {
         'today_bookings': len(today_bookings),
@@ -437,26 +471,40 @@ def api_services():
 
 @app.route('/api/book', methods=['POST'])
 def api_book():
-    if 'user' not in session:
-        return jsonify({'success': False, 'message': 'Usuário não logado'})
+    if 'user_type' not in session or session['user_type'] != 'client':
+        return jsonify({'success': False, 'message': 'Usuário não logado ou sem permissão'})
 
     data = request.get_json()
-    user = session['user']
+    user_id = session['user_id']
+    user = users_db.get(user_id)
+
+    if not user:
+        return jsonify({'success': False, 'message': 'Usuário não encontrado'})
 
     # Encontra o serviço
+    service_id = data.get('service_id')
     service = None
-    for s in get_all_services():
-        if s['id'] == data['service_id']:
-            service = s
+    for s_list in SERVICES.values():
+        for s in s_list:
+            if s['id'] == service_id:
+                service = s
+                break
+        if service:
             break
 
     if not service:
         return jsonify({'success': False, 'message': 'Serviço não encontrado'})
 
     # Verifica conflitos de horário
+    booking_date = data.get('date')
+    booking_time = data.get('time')
+
+    if not booking_date or not booking_time:
+        return jsonify({'success': False, 'message': 'Data e hora são obrigatórias'})
+
     existing_booking = next((b for b in bookings_db 
-                           if b.get('date') == data['date'] 
-                           and b.get('time') == data['time']
+                           if b.get('date') == booking_date 
+                           and b.get('time') == booking_time
                            and b.get('status') != 'cancelled'), None)
 
     if existing_booking:
@@ -475,9 +523,9 @@ def api_book():
         'user_name': user['name'],
         'service_id': service['id'],
         'service_name': service['name'],
-        'date': data['date'],
-        'time': data['time'],
-        'price': price,
+        'date': booking_date,
+        'time': booking_time,
+        'price': round(price, 2),
         'original_price': service['price'],
         'discount_applied': discount_applied,
         'status': 'confirmed',
@@ -488,9 +536,8 @@ def api_book():
     bookings_db.append(booking)
 
     # Atualiza pontos de fidelidade do usuário
-    if user['username'] in users_db:
-        users_db[user['username']]['loyalty_points'] += int(price)
-        users_db[user['username']]['total_visits'] += 1
+    users_db[user_id]['loyalty_points'] += int(price)
+    users_db[user_id]['total_visits'] += 1
 
     save_data()
 
@@ -498,8 +545,8 @@ def api_book():
 
 @app.route('/api/cancel_booking', methods=['POST'])
 def api_cancel_booking():
-    if 'user' not in session:
-        return jsonify({'success': False, 'message': 'Usuário não logado'})
+    if 'user_type' not in session or (session['user_type'] != 'client' and session['user_type'] != 'admin'):
+        return jsonify({'success': False, 'message': 'Usuário não logado ou sem permissão'})
 
     data = request.get_json()
     booking_id = data.get('booking_id')
@@ -509,9 +556,11 @@ def api_cancel_booking():
     if not booking:
         return jsonify({'success': False, 'message': 'Agendamento não encontrado'})
 
-    user = session['user']
-    if booking['user_id'] != user['id'] and user['type'] != 'admin':
-        return jsonify({'success': False, 'message': 'Não autorizado'})
+    user_type = session['user_type']
+    user_id = session.get('user_id')
+
+    if booking['user_id'] != user_id and user_type != 'admin':
+        return jsonify({'success': False, 'message': 'Não autorizado a cancelar este agendamento'})
 
     booking['status'] = 'cancelled'
     save_data()
@@ -520,7 +569,7 @@ def api_cancel_booking():
 
 @app.route('/api/admin/bookings', methods=['GET', 'POST'])
 def api_admin_bookings():
-    if 'user' not in session or session['user']['type'] != 'admin':
+    if 'user_type' not in session or session['user_type'] != 'admin':
         return jsonify({'success': False, 'message': 'Acesso negado'})
 
     if request.method == 'GET':
@@ -537,16 +586,22 @@ def api_admin_bookings():
             return jsonify({'success': False, 'message': 'Agendamento não encontrado'})
 
         if action == 'update_status':
-            booking['status'] = data.get('status')
+            new_status = data.get('status')
+            if new_status:
+                booking['status'] = new_status
+            else:
+                return jsonify({'success': False, 'message': 'Status não fornecido'})
         elif action == 'update_notes':
             booking['admin_notes'] = data.get('notes', '')
+        else:
+            return jsonify({'success': False, 'message': 'Ação desconhecida'})
 
         save_data()
         return jsonify({'success': True, 'booking': booking})
 
 @app.route('/api/admin/change_credentials', methods=['POST'])
 def api_admin_change_credentials():
-    if 'user' not in session or session['user']['type'] != 'admin':
+    if 'user_type' not in session or session['user_type'] != 'admin':
         return jsonify({'success': False, 'message': 'Acesso negado'})
 
     data = request.get_json()
@@ -561,70 +616,64 @@ def api_admin_change_credentials():
     admin_credentials['username'] = new_username
     admin_credentials['password'] = new_password
 
-    # Atualiza a sessão
-    session['user']['name'] = new_username
+    # Atualiza a sessão do admin
+    session['username'] = new_username
+
+    # Salvar as credenciais atualizadas se necessário (depende de como você gerencia a configuração do admin)
+    # Se admin_credentials for persistido em algum lugar, salve aqui.
+    # save_admin_credentials(admin_credentials) 
 
     return jsonify({'success': True, 'message': 'Credenciais do administrador atualizadas com sucesso'})
 
 @app.route('/api/user/update_profile', methods=['POST'])
 def api_user_update_profile():
-    if 'user' not in session:
-        return jsonify({'success': False, 'message': 'Usuário não logado'})
+    if 'user_type' not in session or session['user_type'] != 'client':
+        return jsonify({'success': False, 'message': 'Usuário não logado ou sem permissão'})
 
     data = request.get_json()
-    user = session['user']
-    
-    if user['type'] == 'admin':
-        return jsonify({'success': False, 'message': 'Use a função de admin para alterar credenciais'})
+    user_id = session['user_id']
+    user = users_db.get(user_id)
 
-    current_username = user['username']
-    
-    # Verifica se o usuário existe
-    if current_username not in users_db:
+    if not user:
         return jsonify({'success': False, 'message': 'Usuário não encontrado'})
-
-    user_data = users_db[current_username]
 
     # Atualiza os campos fornecidos
     if data.get('new_password'):
-        user_data['password'] = data['new_password']
-    
+        user['password'] = data['new_password']
+
     if data.get('new_email'):
-        user_data['email'] = data['new_email']
-    
+        user['email'] = data['new_email']
+
     if data.get('new_name'):
-        user_data['name'] = data['new_name']
-    
+        user['name'] = data['new_name']
+
     if data.get('new_phone'):
-        user_data['phone'] = data['new_phone']
+        user['phone'] = data['new_phone']
 
     # Se o username mudou, precisa recriar a entrada no dicionário
-    if data.get('new_username') and data['new_username'] != current_username:
-        new_username = data['new_username']
-        
+    current_username = user['username']
+    new_username = data.get('new_username')
+    if new_username and new_username != current_username:
         # Verifica se o novo username já existe
         if new_username in users_db:
             return jsonify({'success': False, 'message': 'Novo username já existe'})
-        
-        # Move os dados para o novo username
-        user_data['username'] = new_username
-        users_db[new_username] = user_data
+
+        # Remove a entrada antiga e adiciona a nova
         del users_db[current_username]
-        
-        # Atualiza os agendamentos
-        for booking in bookings_db:
-            if booking.get('user_id') == user['id']:
-                booking['user_name'] = user_data['name']
-        
+        user['username'] = new_username
+        users_db[new_username] = user
+
         # Atualiza a sessão
-        session['user']['username'] = new_username
-        session['user']['name'] = user_data['name']
+        session['user_id'] = new_username
+        session['username'] = new_username
+        session['user_data'] = user # Atualiza os dados do usuário na sessão
     else:
         # Atualiza apenas o nome na sessão se mudou
-        session['user']['name'] = user_data['name']
+        session['user_data']['name'] = user['name'] # Atualiza os dados do usuário na sessão
+
 
     save_data()
-    
+
     return jsonify({'success': True, 'message': 'Perfil atualizado com sucesso'})
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -632,17 +681,19 @@ def forgot_password():
     if request.method == 'POST':
         data = request.get_json()
         email = data.get('email')
-        
+
         # Procura usuário pelo email
         user_found = None
+        user_key = None
         for username, user in users_db.items():
             if user.get('email') == email:
                 user_found = user
+                user_key = username
                 break
-        
+
         if not user_found:
             return jsonify({'success': False, 'message': 'Email não encontrado'})
-        
+
         # Gera token de recuperação (em produção, usar biblioteca como itsdangerous)
         try:
             import secrets
@@ -650,29 +701,29 @@ def forgot_password():
         except ImportError:
             import uuid
             reset_token = str(uuid.uuid4()).replace('-', '')
-        
+
         # Salva o token temporariamente (em produção, usar banco de dados com expiração)
         if not hasattr(app, 'reset_tokens'):
             app.reset_tokens = {}
-        
+
         app.reset_tokens[reset_token] = {
-            'username': user_found['username'], 
+            'username': user_key, 
             'email': email,
             'created_at': datetime.now().isoformat()
         }
-        
+
         # Simula envio de email (em produção, usar serviço real de email)
-        reset_link = f"/reset-password?token={reset_token}"
-        
+        reset_link = url_for('reset_password', token=reset_token, _external=True)
+
         # Log para demonstração (em produção, enviar email real)
         print(f"SIMULAÇÃO DE EMAIL ENVIADO:")
         print(f"Para: {email}")
         print(f"Assunto: Recuperação de Senha - Salon Beleza Dourada")
         print(f"Link de recuperação: {reset_link}")
         print(f"Token: {reset_token}")
-        
+
         return jsonify({'success': True, 'message': 'Instruções enviadas por email'})
-    
+
     return render_template('forgot_password.html')
 
 @app.route('/reset-password', methods=['GET', 'POST'])
@@ -681,48 +732,50 @@ def reset_password():
         token = request.args.get('token')
         if not token or not hasattr(app, 'reset_tokens') or token not in app.reset_tokens:
             return redirect(url_for('login'))
-        
+
         # Verifica se o token não expirou (24 horas)
         token_data = app.reset_tokens[token]
         created_at = datetime.fromisoformat(token_data['created_at'])
         if datetime.now() - created_at > timedelta(hours=24):
             del app.reset_tokens[token]
             return redirect(url_for('login'))
-        
+
         return render_template('reset_password.html', token=token)
-    
+
     if request.method == 'POST':
         data = request.get_json()
         token = data.get('token')
         new_password = data.get('new_password')
-        
+
         if not token or not hasattr(app, 'reset_tokens') or token not in app.reset_tokens:
             return jsonify({'success': False, 'message': 'Token inválido ou expirado'})
-        
+
         token_data = app.reset_tokens[token]
         username = token_data['username']
-        
+
         # Verifica se o token não expirou
         created_at = datetime.fromisoformat(token_data['created_at'])
         if datetime.now() - created_at > timedelta(hours=24):
             del app.reset_tokens[token]
             return jsonify({'success': False, 'message': 'Token expirado'})
-        
+
         # Atualiza a senha do usuário
         if username in users_db:
             users_db[username]['password'] = new_password
             save_data()
-            
+
             # Remove o token usado
             del app.reset_tokens[token]
-            
+
             return jsonify({'success': True, 'message': 'Senha redefinida com sucesso'})
         else:
-            return jsonify({'success': False, 'message': 'Usuário não encontrado'})
+            # O usuário associado ao token não existe mais (improvável, mas possível)
+            del app.reset_tokens[token] # Limpa o token
+            return jsonify({'success': False, 'message': 'Usuário não encontrado para redefinição'})
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    session.clear() # Limpa toda a sessão
     return redirect(url_for('index'))
 
 @app.route('/static/<path:filename>')
@@ -732,7 +785,7 @@ def static_files(filename):
 if __name__ == '__main__':
     try:
         load_data()
-        print(f"Aplicação iniciada. Credenciais admin: {admin_credentials}")
+        print(f"Aplicação iniciada. Credenciais admin: {admin_credentials['username']}/****")
         print(f"Usuários carregados: {len(users_db)}")
         print(f"Agendamentos carregados: {len(bookings_db)}")
         print("🌟 Salon Beleza Dourada - Sistema iniciado com sucesso!")
