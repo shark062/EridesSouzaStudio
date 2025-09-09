@@ -782,6 +782,23 @@ def logout():
 def static_files(filename):
     return send_from_directory('static', filename)
 
+@app.route('/api/preview/<service_id>')
+def preview_service(service_id):
+    """Endpoint para preview de serviços"""
+    try:
+        for category, services in services_catalog.items():
+            for service in services:
+                if service.get('id') == service_id or service.get('name').lower().replace(' ', '_') == service_id:
+                    return jsonify({
+                        'success': True,
+                        'service': service,
+                        'preview_url': f"/static/services/{service_id}.jpg"
+                    })
+        
+        return jsonify({'success': False, 'message': 'Serviço não encontrado'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 if __name__ == '__main__':
     try:
         load_data()

@@ -41,8 +41,48 @@
 </div>
 
 <script>
-console.log('✅ Página inicial carregada com sucesso!');
-console.log('🔗 Flask rodando em: http://0.0.0.0:3000');
-console.log('🔗 React rodando em: http://0.0.0.0:5000');
-</script>
+        // Melhorar experiência do usuário
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar efeitos hover nos cartões de serviço
+            const serviceCards = document.querySelectorAll('.service-card');
+            serviceCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            });
+
+            // Adicionar animação suave para os botões
+            const buttons = document.querySelectorAll('button, .btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+        });
+
+        // Função para mostrar preview de serviços
+        function showServicePreview(serviceId) {
+            fetch(`/api/preview/${serviceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Preview: ${data.service.name}\nPreço: R$ ${data.service.price}\nDuração: ${data.service.duration}`);
+                    } else {
+                        alert('Preview não disponível no momento');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar preview:', error);
+                    alert('Erro ao carregar preview');
+                });
+        }
+    </script>
 {% endblock %}
