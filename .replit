@@ -4,37 +4,16 @@ modules = ["python-3.11", "nodejs-20"]
 expertMode = true
 
 [workflows]
-runButton = "Project"
+runButton = "Flask App"
 
 [[workflows.workflow]]
-name = "Salon App"
+name = "Flask App"
 author = 47382727
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python app.py"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Servidor Beauty Salon"
-
-[[workflows.workflow]]
-name = "Servidor Beauty Salon"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd beauty-salon-app && npm run dev"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 5000

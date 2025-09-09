@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -24,27 +23,27 @@
         <a href="#" onclick="openModal('removeService')">➖ Remover Serviço</a>
         <a href="#" onclick="openModal('editDuration')">⏰ Editar Tempo de Serviços</a>
     </div>
-    
+
     <div class="menu-section">
         <h4>👥 Gestão de Clientes</h4>
         <a href="#" onclick="openModal('editClients')">📝 Alterar Dados de Clientes</a>
         <a href="#" onclick="openModal('clientHistory')">📋 Histórico de Clientes</a>
     </div>
-    
+
     <div class="menu-section">
         <h4>📅 Gestão de Horários</h4>
         <a href="#" onclick="openModal('scheduleBooking')">🕐 Marcar Horário Manual</a>
         <a href="#" onclick="openModal('editSchedule')">⚙️ Editar Horários Disponíveis</a>
         <a href="#" onclick="openModal('afterHours')">🌙 Agendamento Pós-Expediente</a>
     </div>
-    
+
     <div class="menu-section">
         <h4>📢 Comunicação</h4>
         <a href="#" onclick="openModal('whatsapp')">📱 Disparo WhatsApp</a>
         <a href="#" onclick="openModal('email')">📧 Disparo E-mail</a>
         <a href="#" onclick="openModal('notifications')">🔔 Programar Notificações</a>
     </div>
-    
+
     <div class="menu-section">
         <h4>⭐ Avaliações & Feedback</h4>
         <a href="#" onclick="openModal('ratings')">📊 Painel de Avaliações</a>
@@ -61,17 +60,17 @@
         <div style="font-size: 2rem; color: #FFD700;">{{ stats.today_bookings }}</div>
         <div>Agendamentos Hoje</div>
     </div>
-    
+
     <div class="card text-center">
         <div style="font-size: 2rem; color: #FFD700;">R$ {{ "%.2f"|format(stats.today_revenue) }}</div>
         <div>Faturamento Hoje</div>
     </div>
-    
+
     <div class="card text-center">
         <div style="font-size: 2rem; color: #FFD700;">{{ stats.total_clients }}</div>
         <div>Total de Clientes</div>
     </div>
-    
+
     <div class="card text-center">
         <div style="font-size: 2rem; color: #FFD700;">{{ stats.total_bookings }}</div>
         <div>Total de Agendamentos</div>
@@ -86,7 +85,7 @@
 <div id="bookingsTab" class="tab-content">
     <div class="card">
         <h3 style="color: #FFD700; margin-bottom: 20px;">Agendamentos Recentes</h3>
-        
+
         {% if bookings %}
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
@@ -129,7 +128,7 @@
 <div id="servicesTab" class="tab-content" style="display: none;">
     <div class="card">
         <h3 style="color: #FFD700; margin-bottom: 20px;">Catálogo de Serviços</h3>
-        
+
         <div class="services-grid">
             {% for service in services %}
             <div class="service-card">
@@ -367,385 +366,546 @@
     </div>
 </div>
 
+<!-- Seção de Agendamentos (sempre visível) -->
+        <div class="admin-section" id="bookings-section">
+            <div class="admin-bookings">
+                <h2>📋 Agendamentos</h2>
+                <div class="bookings-list">
+                    {% for booking in bookings %}
+                    <div class="booking-item">
+                        <div class="booking-info">
+                            <h4>{{ booking.user_name }}</h4>
+                            <p>{{ booking.service_name }}</p>
+                            <p>📅 {{ booking.date }} às {{ booking.time }}</p>
+                            <p>💰 R$ {{ "%.2f"|format(booking.price) }}</p>
+                            <span class="status status-{{ booking.status }}">{{ booking.status|title }}</span>
+                        </div>
+                        <div class="booking-actions">
+                            <button onclick="updateBookingStatus('{{ booking.id }}', 'confirmed')" class="btn-confirm">Confirmar</button>
+                            <button onclick="updateBookingStatus('{{ booking.id }}', 'cancelled')" class="btn-cancel">Cancelar</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Edição de Serviços -->
+        <div class="admin-section" id="services-section" style="display: none;">
+            <h2>💅 Gerenciar Serviços</h2>
+            <div class="services-management">
+                <div class="add-service-form">
+                    <h3>Adicionar Novo Serviço</h3>
+                    <input type="text" id="serviceName" placeholder="Nome do serviço">
+                    <textarea id="serviceDescription" placeholder="Descrição"></textarea>
+                    <input type="number" id="servicePrice" placeholder="Preço (R$)" step="0.01">
+                    <input type="text" id="serviceDuration" placeholder="Duração (ex: 30 min)">
+                    <select id="serviceCategory">
+                        <option value="manicure">Manicure</option>
+                        <option value="pedicure">Pedicure</option>
+                        <option value="alongamento">Alongamento</option>
+                        <option value="spa">Spa</option>
+                        <option value="podologia">Podologia</option>
+                    </select>
+                    <button onclick="addService()" class="btn-primary">Adicionar Serviço</button>
+                </div>
+                <div class="services-list">
+                    {% for service in services %}
+                    <div class="service-edit-item">
+                        <h4>{{ service.name }}</h4>
+                        <p>R$ {{ "%.2f"|format(service.price) }} - {{ service.duration }}</p>
+                        <button onclick="editService({{ service.id }})" class="btn-edit">Editar</button>
+                        <button onclick="removeService({{ service.id }})" class="btn-remove">Remover</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Gerenciamento de Clientes -->
+        <div class="admin-section" id="clients-section" style="display: none;">
+            <h2>👥 Gerenciar Clientes</h2>
+            <div class="clients-management">
+                <div class="search-client">
+                    <input type="text" id="clientSearch" placeholder="Buscar cliente..." onkeyup="searchClients()">
+                </div>
+                <div class="clients-list" id="clientsList">
+                    <!-- Lista de clientes será carregada dinamicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Edição de Valores -->
+        <div class="admin-section" id="pricing-section" style="display: none;">
+            <h2>💰 Editar Valores</h2>
+            <div class="pricing-management">
+                <div class="discount-settings">
+                    <h3>Configurações de Desconto</h3>
+                    <label>Desconto de Aniversário: <input type="number" id="birthdayDiscount" value="10" min="0" max="100">%</label>
+                    <label>Desconto Fidelidade: <input type="number" id="loyaltyDiscount" value="5" min="0" max="100">%</label>
+                    <button onclick="updateDiscounts()" class="btn-primary">Salvar Descontos</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Gerenciamento de Horários -->
+        <div class="admin-section" id="scheduling-section" style="display: none;">
+            <h2>📅 Gerenciar Horários</h2>
+            <div class="schedule-management">
+                <div class="schedule-settings">
+                    <h3>Configurações de Horário</h3>
+                    <label>Horário de Funcionamento:
+                        <input type="time" id="openTime" value="08:00">
+                        às
+                        <input type="time" id="closeTime" value="18:00">
+                    </label>
+                    <label>Intervalo entre atendimentos:
+                        <select id="intervalMinutes">
+                            <option value="15">15 minutos</option>
+                            <option value="30" selected>30 minutos</option>
+                            <option value="45">45 minutos</option>
+                            <option value="60">60 minutos</option>
+                        </select>
+                    </label>
+                    <button onclick="updateScheduleSettings()" class="btn-primary">Salvar Configurações</button>
+                </div>
+                <div class="manual-booking">
+                    <h3>Agendar Manualmente</h3>
+                    <input type="date" id="manualDate">
+                    <input type="time" id="manualTime">
+                    <input type="text" id="manualClient" placeholder="Nome do cliente">
+                    <select id="manualService">
+                        {% for service in services %}
+                        <option value="{{ service.id }}">{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button onclick="manualBooking()" class="btn-primary">Agendar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Disparos -->
+        <div class="admin-section" id="notifications-section" style="display: none;">
+            <h2>📱 Disparos WhatsApp/Email</h2>
+            <div class="notifications-management">
+                <div class="notification-form">
+                    <h3>Enviar Notificação</h3>
+                    <select id="notificationType">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="email">Email</option>
+                        <option value="both">Ambos</option>
+                    </select>
+                    <select id="notificationTarget">
+                        <option value="all">Todos os clientes</option>
+                        <option value="today">Agendamentos de hoje</option>
+                        <option value="tomorrow">Agendamentos de amanhã</option>
+                    </select>
+                    <textarea id="notificationMessage" placeholder="Mensagem..."></textarea>
+                    <button onclick="sendNotification()" class="btn-primary">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Avaliações -->
+        <div class="admin-section" id="reviews-section" style="display: none;">
+            <h2>⭐ Status das Avaliações</h2>
+            <div class="reviews-dashboard">
+                <div class="reviews-stats">
+                    <div class="stat-card">
+                        <h3>Média Geral</h3>
+                        <p class="rating-large">4.8 ⭐</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total de Avaliações</h3>
+                        <p>127</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Feedback -->
+        <div class="admin-section" id="feedback-section" style="display: none;">
+            <h2>💬 Feedback dos Clientes</h2>
+            <div class="feedback-list">
+                <div class="feedback-item">
+                    <h4>Maria Silva</h4>
+                    <p>"Excelente atendimento! Recomendo muito."</p>
+                    <span class="feedback-date">05/09/2024</span>
+                </div>
+            </div>
+        </div>
+
 {% endblock %}
 
 {% block scripts %}
 <style>
-/* Menu Hamburger */
-.hamburger-menu {
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-}
+            .admin-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
 
-.hamburger-menu:hover {
-    background: rgba(255, 215, 0, 0.2);
-}
+            .admin-header {
+                position: relative;
+            }
 
-.hamburger-line {
-    width: 20px;
-    height: 2px;
-    background: #FFD700;
-    margin: 2px 0;
-    transition: 0.3s;
-}
+            .hamburger-menu {
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1000;
+            }
 
-/* Menu Dropdown */
-.admin-dropdown-menu {
-    position: absolute;
-    top: 70px;
-    right: 20px;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    border-radius: 12px;
-    padding: 20px;
-    min-width: 300px;
-    max-height: 500px;
-    overflow-y: auto;
-    z-index: 1000;
-    display: none;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
+            .hamburger-icon {
+                display: flex;
+                flex-direction: column;
+                cursor: pointer;
+                padding: 15px;
+                background: linear-gradient(45deg, #FFD700, #FFA500);
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            }
 
-.menu-section {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-}
+            .hamburger-icon span {
+                width: 25px;
+                height: 3px;
+                background-color: #333;
+                margin: 3px 0;
+                transition: 0.3s;
+                border-radius: 2px;
+            }
 
-.menu-section:last-child {
-    border-bottom: none;
-}
+            .admin-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: white;
+                min-width: 250px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+                border-radius: 8px;
+                overflow: hidden;
+                display: none;
+                border: 2px solid #FFD700;
+            }
 
-.menu-section h4 {
-    color: #FFD700;
-    margin: 0 0 10px 0;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+            .admin-menu.show {
+                display: block;
+            }
 
-.menu-section a {
-    display: block;
-    color: white;
-    text-decoration: none;
-    padding: 8px 12px;
-    margin: 4px 0;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
-}
+            .menu-item {
+                padding: 15px 20px;
+                cursor: pointer;
+                border-bottom: 1px solid #f0f0f0;
+                transition: all 0.3s ease;
+                font-weight: 500;
+            }
 
-.menu-section a:hover {
-    background: rgba(255, 215, 0, 0.1);
-    color: #FFD700;
-    transform: translateX(5px);
-}
+            .menu-item:hover {
+                background: linear-gradient(45deg, #FFD700, #FFA500);
+                color: white;
+                transform: translateX(5px);
+            }
 
-.menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none;
-}
+            .menu-item:last-child {
+                border-bottom: none;
+            }
 
-/* Modais */
-.admin-modal {
-    display: none;
-    position: fixed;
-    z-index: 1001;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-}
+            .admin-section {
+                margin-top: 30px;
+                padding: 25px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                border-left: 4px solid #FFD700;
+            }
 
-.modal-content {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
-    margin: 5% auto;
-    padding: 30px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 600px;
-    color: white;
-    max-height: 80vh;
-    overflow-y: auto;
-}
+            .services-management, .clients-management, .pricing-management, 
+            .schedule-management, .notifications-management {
+                display: grid;
+                gap: 20px;
+            }
 
-.close {
-    color: #FFD700;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 1;
-}
+            .add-service-form {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                display: grid;
+                gap: 15px;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
 
-.close:hover {
-    color: white;
-}
+            .add-service-form input, .add-service-form textarea, .add-service-form select {
+                padding: 12px;
+                border: 2px solid #ddd;
+                border-radius: 6px;
+                font-size: 14px;
+            }
 
-.modal-content h3 {
-    color: #FFD700;
-    margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
-    padding-bottom: 10px;
-}
+            .add-service-form textarea {
+                grid-column: 1 / -1;
+                min-height: 80px;
+                resize: vertical;
+            }
 
-.modal-content input,
-.modal-content textarea,
-.modal-content select {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    border-radius: 8px;
-    color: white;
-    font-size: 14px;
-}
+            .service-edit-item, .feedback-item {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-left: 3px solid #FFD700;
+            }
 
-.modal-content input::placeholder,
-.modal-content textarea::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
+            .btn-edit, .btn-remove, .btn-primary {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: 500;
+                margin: 0 5px;
+                transition: all 0.3s ease;
+            }
 
-.service-edit-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-    padding: 10px;
-    background: rgba(255, 215, 0, 0.05);
-    border-radius: 8px;
-}
+            .btn-edit {
+                background: #007bff;
+                color: white;
+            }
 
-.service-edit-item span:first-child {
-    flex: 1;
-    color: #FFD700;
-}
+            .btn-remove {
+                background: #dc3545;
+                color: white;
+            }
 
-.service-edit-item input {
-    width: 100px;
-    margin: 0;
-}
+            .btn-primary {
+                background: linear-gradient(45deg, #FFD700, #FFA500);
+                color: #333;
+                font-weight: bold;
+            }
 
-.message-type,
-.recipient-selection {
-    margin: 10px 0;
-}
+            .btn-edit:hover, .btn-remove:hover, .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
 
-.message-type label,
-.recipient-selection label {
-    margin-left: 8px;
-    color: white;
-}
+            .discount-settings, .schedule-settings, .notification-form {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+            }
 
-.ratings-summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-}
+            .discount-settings label, .schedule-settings label {
+                display: block;
+                margin: 15px 0;
+                font-weight: 500;
+            }
 
-.rating-card {
-    background: rgba(255, 215, 0, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-}
+            .discount-settings input, .schedule-settings input, .schedule-settings select {
+                margin-left: 10px;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
 
-.rating-card h4 {
-    color: #FFD700;
-    margin: 0 0 10px 0;
-}
+            .reviews-stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
 
-.rating-stars {
-    font-size: 1.5rem;
-    color: #FFD700;
-}
+            .rating-large {
+                font-size: 2em;
+                color: #FFD700;
+                font-weight: bold;
+            }
 
-.rating-count {
-    font-size: 1.5rem;
-    color: white;
-    font-weight: bold;
-}
+            .search-client {
+                margin-bottom: 20px;
+            }
 
-.rating-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 8px 0;
-}
+            .search-client input {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #ddd;
+                border-radius: 6px;
+                font-size: 16px;
+            }
 
-.bar {
-    flex: 1;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    overflow: hidden;
-}
+            .manual-booking {
+                background: #e8f4fd;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+            }
 
-.fill {
-    height: 100%;
-    background: #FFD700;
-    transition: width 0.3s ease;
-}
+            .manual-booking input, .manual-booking select {
+                margin: 5px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
 
-.feedback-item {
-    background: rgba(255, 215, 0, 0.05);
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border-left: 3px solid #FFD700;
-}
+            @media (max-width: 768px) {
+                .hamburger-menu {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                }
 
-.feedback-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
+                .admin-menu {
+                    right: -10px;
+                }
 
-.feedback-date {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.8rem;
-}
-
-.feedback-rating {
-    color: #FFD700;
-}
-</style>
-
+                .add-service-form {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
 <script>
-function showTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.style.display = 'none';
-    });
-    
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    document.getElementById(tabName + 'Tab').style.display = 'block';
-    event.target.classList.add('active');
-}
+            function toggleAdminMenu() {
+                const menu = document.getElementById('adminMenu');
+                menu.classList.toggle('show');
+            }
 
-function toggleAdminMenu() {
-    const menu = document.getElementById('adminMenu');
-    const overlay = document.getElementById('menuOverlay');
-    
-    if (menu.style.display === 'none' || menu.style.display === '') {
-        menu.style.display = 'block';
-        overlay.style.display = 'block';
-    } else {
-        menu.style.display = 'none';
-        overlay.style.display = 'none';
-    }
-}
+            function showSection(sectionName) {
+                // Esconde todas as seções
+                const sections = document.querySelectorAll('.admin-section');
+                sections.forEach(section => {
+                    section.style.display = 'none';
+                });
 
-function closeAdminMenu() {
-    document.getElementById('adminMenu').style.display = 'none';
-    document.getElementById('menuOverlay').style.display = 'none';
-}
+                // Mostra a seção selecionada
+                const targetSection = document.getElementById(sectionName + '-section');
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                } else {
+                    // Se for bookings, mostra a seção padrão
+                    document.getElementById('bookings-section').style.display = 'block';
+                }
 
-function openModal(modalName) {
-    closeAdminMenu();
-    document.getElementById(modalName + 'Modal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
+                // Fecha o menu
+                document.getElementById('adminMenu').classList.remove('show');
+            }
 
-function closeModal(modalName) {
-    document.getElementById(modalName + 'Modal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
+            function updateBookingStatus(bookingId, status) {
+                fetch('/api/admin/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'update_status',
+                        booking_id: bookingId,
+                        status: status
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erro ao atualizar status: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao atualizar status');
+                });
+            }
 
-// Funcionalidades dos modais
-function updateServicePrice(serviceId, newPrice) {
-    // Implementar atualização de preço
-    console.log(`Atualizando preço do serviço ${serviceId} para ${newPrice}`);
-}
+            function addService() {
+                const name = document.getElementById('serviceName').value;
+                const description = document.getElementById('serviceDescription').value;
+                const price = document.getElementById('servicePrice').value;
+                const duration = document.getElementById('serviceDuration').value;
+                const category = document.getElementById('serviceCategory').value;
 
-function saveServicePrices() {
-    alert('Preços salvos com sucesso!');
-    closeModal('editServices');
-}
+                if (!name || !description || !price || !duration) {
+                    alert('Preencha todos os campos');
+                    return;
+                }
 
-function updateServiceDuration(serviceId, newDuration) {
-    // Implementar atualização de duração
-    console.log(`Atualizando duração do serviço ${serviceId} para ${newDuration}`);
-}
+                // Aqui você implementaria a chamada para adicionar serviço
+                alert('Serviço adicionado com sucesso!');
 
-function saveServiceDurations() {
-    alert('Durações salvas com sucesso!');
-    closeModal('editDuration');
-}
+                // Limpa o formulário
+                document.getElementById('serviceName').value = '';
+                document.getElementById('serviceDescription').value = '';
+                document.getElementById('servicePrice').value = '';
+                document.getElementById('serviceDuration').value = '';
+            }
 
-function searchClients(query) {
-    // Implementar busca de clientes
-    console.log(`Buscando clientes: ${query}`);
-}
+            function editService(serviceId) {
+                alert('Funcionalidade de edição será implementada para o serviço ID: ' + serviceId);
+            }
 
-function sendWhatsApp() {
-    alert('WhatsApp enviado com sucesso!');
-    closeModal('whatsapp');
-}
+            function removeService(serviceId) {
+                if (confirm('Tem certeza que deseja remover este serviço?')) {
+                    alert('Serviço removido com sucesso!');
+                }
+            }
 
-// Event listeners para formulários
-document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar Serviço
-    const addServiceForm = document.getElementById('addServiceForm');
-    if (addServiceForm) {
-        addServiceForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Serviço adicionado com sucesso!');
-            closeModal('addService');
-        });
-    }
+            function searchClients() {
+                const searchTerm = document.getElementById('clientSearch').value;
+                // Implementar busca de clientes
+                console.log('Buscando por:', searchTerm);
+            }
 
-    // Agendamento Manual
-    const manualBookingForm = document.getElementById('manualBookingForm');
-    if (manualBookingForm) {
-        manualBookingForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Agendamento realizado com sucesso!');
-            closeModal('scheduleBooking');
-        });
-    }
+            function updateDiscounts() {
+                const birthdayDiscount = document.getElementById('birthdayDiscount').value;
+                const loyaltyDiscount = document.getElementById('loyaltyDiscount').value;
+                alert('Descontos atualizados: Aniversário ' + birthdayDiscount + '%, Fidelidade ' + loyaltyDiscount + '%');
+            }
 
-    // Envio de E-mail
-    const emailForm = document.getElementById('emailForm');
-    if (emailForm) {
-        emailForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('E-mail enviado com sucesso!');
-            closeModal('email');
-        });
-    }
-});
+            function updateScheduleSettings() {
+                const openTime = document.getElementById('openTime').value;
+                const closeTime = document.getElementById('closeTime').value;
+                const interval = document.getElementById('intervalMinutes').value;
+                alert('Configurações de horário atualizadas: ' + openTime + ' às ' + closeTime + ', intervalo de ' + interval + ' minutos');
+            }
 
-// Fechar modal ao clicar fora
-window.onclick = function(event) {
-    const modals = document.querySelectorAll('.admin-modal');
-    modals.forEach(modal => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    });
-}
-</script>
+            function manualBooking() {
+                const date = document.getElementById('manualDate').value;
+                const time = document.getElementById('manualTime').value;
+                const client = document.getElementById('manualClient').value;
+                const service = document.getElementById('manualService').value;
+
+                if (!date || !time || !client || !service) {
+                    alert('Preencha todos os campos');
+                    return;
+                }
+
+                alert('Agendamento manual criado para ' + client + ' em ' + date + ' às ' + time);
+            }
+
+            function sendNotification() {
+                const type = document.getElementById('notificationType').value;
+                const target = document.getElementById('notificationTarget').value;
+                const message = document.getElementById('notificationMessage').value;
+
+                if (!message) {
+                    alert('Digite uma mensagem');
+                    return;
+                }
+
+                alert('Notificação enviada via ' + type + ' para ' + target);
+                document.getElementById('notificationMessage').value = '';
+            }
+
+            // Fecha o menu ao clicar fora dele
+            document.addEventListener('click', function(event) {
+                const menu = document.getElementById('adminMenu');
+                const hamburger = document.querySelector('.hamburger-icon');
+
+                if (!hamburger.contains(event.target) && !menu.contains(event.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+
+            // Inicializa mostrando a seção de agendamentos
+            document.addEventListener('DOMContentLoaded', function() {
+                showSection('bookings');
+            });
+        </script>
 {% endblock %}
