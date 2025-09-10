@@ -8,7 +8,11 @@ import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'beauty_salon_secret_key_2024'
-CORS(app, origins=["http://localhost:5000", "http://0.0.0.0:5000", "https://*.replit.dev", "https://*.repl.co"])
+CORS(app, 
+     origins=["http://localhost:5000", "http://0.0.0.0:5000", "https://*.replit.dev", "https://*.repl.co"],
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     supports_credentials=True)
 
 # Dados em memória para demonstração
 users_db = []
@@ -268,13 +272,28 @@ def api_bookings():
 @app.route('/api/debug', methods=['GET'])
 def api_debug():
     return jsonify({
+        'status': 'active',
         'users_count': len(users_db),
         'bookings_count': len(bookings_db),
         'services_count': len(services_db),
         'users_sample': users_db[:3] if users_db else [],
         'bookings_sample': bookings_db[:3] if bookings_db else [],
         'services_sample': services_db[:3] if services_db else [],
-        'timestamp': datetime.now().isoformat()
+        'server_time': datetime.now().isoformat(),
+        'data_files_exist': {
+            'users': os.path.exists(USERS_FILE),
+            'bookings': os.path.exists(BOOKINGS_FILE),
+            'services': os.path.exists(SERVICES_FILE)
+        }
+    })
+
+# Endpoint de status para verificar conectividade
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    return jsonify({
+        'status': 'online',
+        'timestamp': datetime.now().isoformat(),
+        'version': '1.0.0'
     })
 
 if __name__ == '__main__':

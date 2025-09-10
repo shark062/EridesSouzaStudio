@@ -4,9 +4,10 @@ const AuthContext = createContext();
 
 // Configuração de sincronização de dados
 const SYNC_CONFIG = {
-  apiBase: 'http://0.0.0.0:3000/api',
-  syncInterval: 30000, // 30 segundos
-  maxRetries: 3
+  apiBase: `${window.location.protocol}//${window.location.hostname}:3000/api`,
+  syncInterval: 10000, // 10 segundos para melhor sincronização
+  maxRetries: 5,
+  retryDelay: 2000
 };
 
 export const useAuth = () => {
@@ -23,30 +24,43 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState('disconnected');
 
-  // Funções de sincronização
-  const syncWithServer = async () => {
+  // Funções de sincronização melhoradas
+  const syncWithServer = async (retryCount = 0) => {
     try {
       setSyncStatus('syncing');
+      console.log('🔄 Iniciando sincronização...', { attempt: retryCount + 1 });
       
       // Primeiro, enviar dados locais para o servidor
       await pushLocalDataToServer();
       
-      // Buscar dados do servidor
+      // Buscar dados do servidor com timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+      
       const response = await fetch(`${SYNC_CONFIG.apiBase}/sync`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const serverData = await response.json();
+        console.log('📡 Dados recebidos do servidor:', {
+          users: serverData.users?.length || 0,
+          bookings: serverData.bookings?.length || 0,
+          services: serverData.services?.length || 0
+        });
         
         // Sincronizar usuários
         if (serverData.users && Array.isArray(serverData.users)) {
           const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
           const mergedUsers = mergeArraysById(localUsers, serverData.users);
           localStorage.setItem('registeredUsers', JSON.stringify(mergedUsers));
+          console.log('👥 Usuários sincronizados:', mergedUsers.length);
         }
         
         // Sincronizar agendamentos - garantir compatibilidade com múltiplas chaves
@@ -80,22 +94,42 @@ export const AuthProvider = ({ children }) => {
         // Sincronizar serviços
         if (serverData.services && Array.isArray(serverData.services)) {
           localStorage.setItem('services', JSON.stringify(serverData.services));
+          console.log('💅 Serviços sincronizados:', serverData.services.length);
         }
         
         setSyncStatus('connected');
-        console.log('✅ Dados sincronizados com sucesso');
+        console.log('✅ Sincronização completa com sucesso');
         
         // Disparar evento personalizado para notificar componentes
         window.dispatchEvent(new CustomEvent('dataSync', { 
-          detail: { users: true, bookings: true, services: true } 
+          detail: { 
+            users: true, 
+            bookings: true, 
+            services: true,
+            timestamp: Date.now() 
+          } 
         }));
         
+        return true;
+        
       } else {
-        throw new Error('Falha na sincronização');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.log('📱 Modo offline - dados locais mantidos');
-      setSyncStatus('offline');
+      console.warn('⚠️ Erro na sincronização:', error.message);
+      
+      // Tentar novamente em caso de erro
+      if (retryCount < SYNC_CONFIG.maxRetries) {
+        console.log(`🔄 Tentando novamente em ${SYNC_CONFIG.retryDelay/1000}s... (${retryCount + 1}/${SYNC_CONFIG.maxRetries})`);
+        setTimeout(() => {
+          syncWithServer(retryCount + 1);
+        }, SYNC_CONFIG.retryDelay);
+      } else {
+        console.log('📱 Modo offline - dados locais mantidos');
+        setSyncStatus('offline');
+      }
+      
+      return false;
     }
   };
 
@@ -116,49 +150,69 @@ export const AuthProvider = ({ children }) => {
   // Função para enviar dados locais para servidor
   const pushLocalDataToServer = async () => {
     try {
+      const results = {};
+
       // Enviar usuários
       const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       if (localUsers.length > 0) {
-        await pushDataToServer('users', localUsers);
+        results.users = await pushDataToServer('users', localUsers);
+        console.log('📤 Enviando usuários:', localUsers.length);
       }
 
       // Enviar agendamentos
       const localBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
       if (localBookings.length > 0) {
-        await pushDataToServer('bookings', localBookings);
+        results.bookings = await pushDataToServer('bookings', localBookings);
+        console.log('📤 Enviando agendamentos:', localBookings.length);
       }
 
       // Enviar serviços
       const localServices = JSON.parse(localStorage.getItem('services') || '[]');
       if (localServices.length > 0) {
-        await pushDataToServer('services', localServices);
+        results.services = await pushDataToServer('services', localServices);
+        console.log('📤 Enviando serviços:', localServices.length);
       }
+
+      return results;
     } catch (error) {
-      console.log('📱 Dados ficaram locais, sincronizarão quando conectar');
+      console.warn('📱 Erro ao enviar dados locais:', error.message);
+      throw error;
     }
   };
 
   const pushDataToServer = async (dataType, data) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos timeout
+
       const response = await fetch(`${SYNC_CONFIG.apiBase}/sync/${dataType}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (response.ok) {
-        await syncWithServer(); // Resincronizar após push
-        return { success: true };
+        const result = await response.json();
+        console.log(`✅ ${dataType} enviados com sucesso:`, result);
+        return { success: true, data: result };
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.log('📱 Dados salvos localmente, sincronizarão quando conectar');
+      console.warn(`📱 Erro ao enviar ${dataType}:`, error.message);
+      return { success: false, error: error.message };
     }
-    return { success: false };
   };
 
   useEffect(() => {
+    let syncIntervalId;
+    let retryTimeoutId;
+    
     // Verificar se há usuário logado no localStorage
     const savedUser = localStorage.getItem('user');
     const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -168,44 +222,74 @@ export const AuthProvider = ({ children }) => {
       setIsAdmin(savedIsAdmin);
     }
 
+    // Função para iniciar sincronização com retry
+    const startSync = async () => {
+      const success = await syncWithServer();
+      
+      if (success) {
+        // Se sincronização foi bem-sucedida, configurar intervalo regular
+        syncIntervalId = setInterval(syncWithServer, SYNC_CONFIG.syncInterval);
+      } else {
+        // Se falhou, tentar novamente em breve
+        retryTimeoutId = setTimeout(startSync, SYNC_CONFIG.retryDelay);
+      }
+    };
+
     // Iniciar sincronização
-    syncWithServer();
-    
-    // Configurar sincronização automática
-    const syncInterval = setInterval(syncWithServer, SYNC_CONFIG.syncInterval);
+    startSync();
     
     // Listener para detectar quando a aba fica ativa
     const handleVisibilityChange = () => {
       if (!document.hidden) {
+        console.log('👁️ Aba ficou ativa - sincronizando dados');
         syncWithServer();
       }
     };
     
     // Listener para mudanças no localStorage de outros dispositivos/abas
     const handleStorageChange = (e) => {
-      if (['userBookings', 'registeredUsers', 'services'].includes(e.key)) {
-        console.log('🔄 Dados alterados em outro dispositivo/aba');
-        syncWithServer();
+      const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services'];
+      if (watchedKeys.includes(e.key)) {
+        console.log('🔄 Dados alterados em outro dispositivo/aba:', e.key);
+        setTimeout(syncWithServer, 1000); // Delay para evitar conflitos
       }
     };
     
     // Listener para conexão de rede
     const handleOnline = () => {
       console.log('🌐 Conexão restaurada - sincronizando...');
+      setSyncStatus('syncing');
+      setTimeout(syncWithServer, 500);
+    };
+
+    // Listener para perda de conexão
+    const handleOffline = () => {
+      console.log('📱 Conexão perdida - modo offline');
+      setSyncStatus('offline');
+    };
+    
+    // Listener personalizado para forçar sincronização
+    const handleForceSync = () => {
+      console.log('🔄 Sincronização forçada solicitada');
       syncWithServer();
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('forceSync', handleForceSync);
     
     setLoading(false);
 
     return () => {
-      clearInterval(syncInterval);
+      if (syncIntervalId) clearInterval(syncIntervalId);
+      if (retryTimeoutId) clearTimeout(retryTimeoutId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('forceSync', handleForceSync);
     };
   }, []);
 

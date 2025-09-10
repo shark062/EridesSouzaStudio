@@ -10,8 +10,9 @@ import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, syncStatus, syncWithServer } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [lastSyncTime, setLastSyncTime] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [services, setServices] = useState([]);
@@ -40,8 +41,9 @@ const AdminDashboard = () => {
     loadServices();
 
     // Listener para sincronização automática
-    const handleDataSync = () => {
+    const handleDataSync = (event) => {
       console.log('🔄 Dados sincronizados - recarregando dashboard admin');
+      setLastSyncTime(new Date());
       loadData();
       loadServices();
     };
@@ -559,13 +561,88 @@ const AdminDashboard = () => {
           ✨ PAINEL ADMINISTRATIVO ✨
         </div>
 
+        {/* Status de Sincronização */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '15px',
+          marginBottom: '20px',
+          marginTop: '10px'
+        }}>
+          <div style={{
+            background: syncStatus === 'connected' ? 'rgba(76, 175, 80, 0.2)' : 
+                       syncStatus === 'syncing' ? 'rgba(255, 193, 7, 0.2)' : 
+                       'rgba(244, 67, 54, 0.2)',
+            border: `1px solid ${syncStatus === 'connected' ? '#4CAF50' : 
+                                 syncStatus === 'syncing' ? '#FFC107' : 
+                                 '#F44336'}`,
+            borderRadius: '20px',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.9rem',
+            fontWeight: 'bold'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>
+              {syncStatus === 'connected' ? '🟢' : 
+               syncStatus === 'syncing' ? '🟡' : '🔴'}
+            </span>
+            <span style={{
+              color: syncStatus === 'connected' ? '#4CAF50' : 
+                     syncStatus === 'syncing' ? '#FFC107' : 
+                     '#F44336'
+            }}>
+              {syncStatus === 'connected' ? 'Conectado' : 
+               syncStatus === 'syncing' ? 'Sincronizando...' : 
+               'Offline'}
+            </span>
+          </div>
+          
+          {lastSyncTime && (
+            <div style={{
+              background: 'rgba(33, 150, 243, 0.1)',
+              border: '1px solid rgba(33, 150, 243, 0.3)',
+              borderRadius: '15px',
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              color: '#2196F3'
+            }}>
+              Última sync: {lastSyncTime.toLocaleTimeString()}
+            </div>
+          )}
+          
+          <button
+            onClick={() => {
+              console.log('🔄 Forçando sincronização manual...');
+              syncWithServer();
+              window.dispatchEvent(new Event('forceSync'));
+            }}
+            style={{
+              background: '#2196F3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '0.8rem',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            🔄 Sincronizar
+          </button>
+        </div>
+
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '20px',
-          marginBottom: '15px',
-          marginTop: '10px'
+          marginBottom: '15px'
         }}>
           <div style={{
             position: 'relative',
