@@ -1,32 +1,35 @@
-/* Tema Preto e Dourado - Salon Beleza Dourada */
+
+/* Tema Sage e Tons Terrosos - Salon Beleza Natural */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Cores principais - Preto e Dourado */
-  --color-black: #000000;
-  --color-dark-gray: #1a1a1a;
-  --color-charcoal: #2d2d2d;
-  --color-gold: #FFD700;
-  --color-light-gold: #FFF8DC;
-  --color-dark-gold: #B8860B;
+  /* Cores principais - Verde Sage e Tons Terrosos */
+  --color-sage: #8B9D83;
+  --color-dark-sage: #6B7A63;
+  --color-light-sage: #A8B5A0;
+  --color-cream: #F8F6F0;
+  --color-warm-beige: #D4B896;
+  --color-deep-gold: #B8860B;
   
   /* Cores secundárias */
   --color-white: #FFFFFF;
-  --color-light-gray: #F5F5F5;
-  --color-medium-gray: #CCCCCC;
+  --color-light-cream: #FEFCF7;
+  --color-soft-beige: #E8DCC0;
+  --color-muted-sage: #9CAA94;
   
   /* Gradientes */
-  --gradient-primary: linear-gradient(135deg, #000000 0%, #2d2d2d 100%);
-  --gradient-gold: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
-  --gradient-card: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
-  --gradient-translucent: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%);
+  --gradient-primary: linear-gradient(135deg, #8B9D83 0%, #6B7A63 100%);
+  --gradient-warm: linear-gradient(135deg, #D4B896 0%, #B8860B 100%);
+  --gradient-card: linear-gradient(135deg, rgba(139, 157, 131, 0.1) 0%, rgba(248, 246, 240, 0.9) 100%);
+  --gradient-translucent: linear-gradient(135deg, rgba(139, 157, 131, 0.05) 0%, rgba(248, 246, 240, 0.95) 100%);
+  --gradient-header: linear-gradient(135deg, #F8F6F0 0%, #E8DCC0 50%, #D4B896 100%);
   
   /* Sombras */
-  --shadow-soft: 0 4px 20px rgba(255, 215, 0, 0.1);
-  --shadow-medium: 0 8px 30px rgba(255, 215, 0, 0.2);
-  --shadow-strong: 0 12px 40px rgba(255, 215, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.4);
+  --shadow-soft: 0 4px 20px rgba(139, 157, 131, 0.15);
+  --shadow-medium: 0 8px 30px rgba(139, 157, 131, 0.2);
+  --shadow-strong: 0 12px 40px rgba(139, 157, 131, 0.25);
+  --shadow-glow: 0 0 20px rgba(212, 184, 150, 0.3);
   
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -48,15 +51,15 @@ html {
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--gradient-primary);
-  color: var(--color-white);
+  background: var(--gradient-header);
+  color: var(--color-dark-sage);
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
   position: relative;
 }
 
-/* Background com efeito de partículas douradas */
+/* Background com efeito de ondas suaves */
 body::before {
   content: '';
   position: fixed;
@@ -65,9 +68,9 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 60%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 20% 20%, rgba(139, 157, 131, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(212, 184, 150, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(139, 157, 131, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
@@ -80,19 +83,19 @@ body::before {
 
 /* Links */
 a {
-  color: var(--color-gold);
+  color: var(--color-sage);
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 a:hover {
-  color: var(--color-light-gold);
+  color: var(--color-dark-sage);
   text-decoration: underline;
 }
 
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--color-gold);
+  color: var(--color-dark-sage);
   font-weight: 600;
   margin-bottom: 0.5em;
 }
@@ -100,10 +103,12 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
   font-size: 2.5rem;
   font-weight: 800;
+  color: var(--color-sage);
 }
 
 h2 {
   font-size: 2rem;
+  color: var(--color-sage);
 }
 
 h3 {
@@ -116,26 +121,26 @@ h3 {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(139, 157, 131, 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gradient-gold);
+  background: var(--gradient-primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, var(--color-light-gold), var(--color-gold));
+  background: var(--gradient-warm);
 }
 
 /* Inputs e formulários */
 input, textarea, select {
   font-family: inherit;
   font-size: 1rem;
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  border: 2px solid rgba(139, 157, 131, 0.3);
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  color: var(--color-white);
+  background: rgba(248, 246, 240, 0.9);
+  color: var(--color-dark-sage);
   padding: 12px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
@@ -143,13 +148,13 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: var(--color-gold);
+  border-color: var(--color-sage);
   box-shadow: var(--shadow-medium);
   transform: translateY(-2px);
 }
 
 input::placeholder, textarea::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(107, 122, 99, 0.6);
 }
 
 /* Botões base */
@@ -164,8 +169,8 @@ button {
   padding: 12px 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: var(--gradient-gold);
-  color: var(--color-black);
+  background: var(--gradient-primary);
+  color: var(--color-cream);
   box-shadow: var(--shadow-soft);
 }
 
@@ -189,7 +194,7 @@ button:focus,
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid var(--color-gold);
+  outline: 2px solid var(--color-sage);
   outline-offset: 2px;
 }
 
@@ -256,12 +261,16 @@ textarea:focus {
   text-align: center;
 }
 
-.text-gold {
-  color: var(--color-gold);
+.text-sage {
+  color: var(--color-sage);
 }
 
-.text-white {
-  color: var(--color-white);
+.text-dark-sage {
+  color: var(--color-dark-sage);
+}
+
+.text-cream {
+  color: var(--color-cream);
 }
 
 /* Responsividade */

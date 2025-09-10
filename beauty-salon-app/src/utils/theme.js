@@ -1,36 +1,39 @@
+
 export const theme = {
   colors: {
     primary: {
-      black: '#000000',
-      darkGray: '#1a1a1a',
-      charcoal: '#2d2d2d',
-      gold: '#FFD700',
-      lightGold: '#FFF8DC',
-      darkGold: '#B8860B'
+      sage: '#8B9D83',        // Verde sage principal
+      darkSage: '#6B7A63',    // Verde sage mais escuro
+      lightSage: '#A8B5A0',   // Verde sage mais claro
+      cream: '#F8F6F0',       // Creme/off-white
+      warmBeige: '#D4B896',   // Bege dourado
+      deepGold: '#B8860B'     // Dourado mais escuro para detalhes
     },
     secondary: {
       white: '#FFFFFF',
-      lightGray: '#F5F5F5',
-      mediumGray: '#CCCCCC'
+      lightCream: '#FEFCF7',
+      softBeige: '#E8DCC0',
+      mutedSage: '#9CAA94'
     },
     accent: {
-      success: '#4CAF50',
-      warning: '#FF9800',
-      error: '#F44336',
-      info: '#2196F3'
+      success: '#7FB069',
+      warning: '#E4A853',
+      error: '#C17767',
+      info: '#7A9CC6'
     }
   },
   gradients: {
-    primary: 'linear-gradient(135deg, #000000 0%, #2d2d2d 100%)',
-    gold: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
-    card: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%)',
-    translucent: 'linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%)'
+    primary: 'linear-gradient(135deg, #8B9D83 0%, #6B7A63 100%)',
+    warm: 'linear-gradient(135deg, #D4B896 0%, #B8860B 100%)',
+    card: 'linear-gradient(135deg, rgba(139, 157, 131, 0.1) 0%, rgba(248, 246, 240, 0.9) 100%)',
+    translucent: 'linear-gradient(135deg, rgba(139, 157, 131, 0.05) 0%, rgba(248, 246, 240, 0.95) 100%)',
+    header: 'linear-gradient(135deg, #F8F6F0 0%, #E8DCC0 50%, #D4B896 100%)'
   },
   shadows: {
-    soft: '0 4px 20px rgba(255, 215, 0, 0.1)',
-    medium: '0 8px 30px rgba(255, 215, 0, 0.2)',
-    strong: '0 12px 40px rgba(255, 215, 0, 0.3)',
-    glow: '0 0 20px rgba(255, 215, 0, 0.4)'
+    soft: '0 4px 20px rgba(139, 157, 131, 0.15)',
+    medium: '0 8px 30px rgba(139, 157, 131, 0.2)',
+    strong: '0 12px 40px rgba(139, 157, 131, 0.25)',
+    glow: '0 0 20px rgba(212, 184, 150, 0.3)'
   },
   borderRadius: {
     small: '8px',
@@ -49,19 +52,19 @@ export const theme = {
 };
 
 export const getCardStyle = (transparent = false) => ({
-  background: 'rgba(0, 0, 0, 0.3)',
+  background: transparent ? 'rgba(248, 246, 240, 0.8)' : 'rgba(248, 246, 240, 0.95)',
   backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.colors.primary.gold}40`,
+  border: `1px solid rgba(139, 157, 131, 0.3)`,
   borderRadius: theme.borderRadius.medium,
   boxShadow: theme.shadows.soft,
-  color: theme.colors.secondary.white
+  color: theme.colors.primary.darkSage
 });
 
 export const getButtonStyle = (variant = 'primary') => {
   const styles = {
     primary: {
-      background: theme.gradients.gold,
-      color: theme.colors.primary.black,
+      background: theme.gradients.primary,
+      color: theme.colors.primary.cream,
       border: 'none',
       boxShadow: theme.shadows.medium,
       '&:hover': {
@@ -71,11 +74,19 @@ export const getButtonStyle = (variant = 'primary') => {
     },
     secondary: {
       background: 'transparent',
-      color: theme.colors.primary.gold,
-      border: `2px solid ${theme.colors.primary.gold}`,
+      color: theme.colors.primary.sage,
+      border: `2px solid ${theme.colors.primary.sage}`,
       '&:hover': {
-        background: theme.colors.primary.gold,
-        color: theme.colors.primary.black
+        background: theme.colors.primary.sage,
+        color: theme.colors.primary.cream
+      }
+    },
+    warm: {
+      background: theme.gradients.warm,
+      color: theme.colors.primary.cream,
+      border: 'none',
+      '&:hover': {
+        boxShadow: theme.shadows.glow
       }
     },
     danger: {
