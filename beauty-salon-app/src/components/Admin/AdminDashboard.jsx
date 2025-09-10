@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
 import AutomationPanel from './AutomationPanel';
+import TechniqueForm from './TechniqueForm';
+import SignaturePad from '../Common/SignaturePad';
+import PDFGenerator from '../../utils/pdfGenerator';
 import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
@@ -15,6 +18,12 @@ const AdminDashboard = () => {
   const [formData, setFormData] = useState({});
   const [selectedService, setSelectedService] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null);
+  const [showTechniqueForm, setShowTechniqueForm] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [pendingTechniqueData, setPendingTechniqueData] = useState(null);
+  const [clientSignature, setClientSignature] = useState(null);
+  const [professionalSignature, setProfessionalSignature] = useState(null);
   const [stats, setStats] = useState({
     todayBookings: 0,
     todayRevenue: 0,
@@ -122,6 +131,145 @@ const AdminDashboard = () => {
     setShowModal(null);
     setFormData({});
     setSelectedService(null);
+  };
+
+  const handleFinishService = (booking) => {
+    const client = clients.find(c => c.id === booking.userId);
+    const bookingWithClient = {
+      ...booking,
+      clientName: client?.name || 'Cliente'
+    };
+    setSelectedBooking(bookingWithClient);
+    setShowTechniqueForm(true);
+  };
+
+  const handleTechniqueFormComplete = (techniqueData) => {
+    setPendingTechniqueData(techniqueData);
+    setShowTechniqueForm(false);
+    setShowSignatureModal(true);
+  };
+
+  const handleSignaturesComplete = async () => {
+    if (!pendingTechniqueData || !clientSignature) {
+      alert('Por favor, capture a assinatura do cliente.');
+      return;
+    }
+
+    try {
+      // Gerar PDF
+      const pdfGenerator = new PDFGenerator();
+      const pdf = await pdfGenerator.generateServiceTermPDF(
+        selectedBooking,
+        selectedBooking.questionnaireData,
+        pendingTechniqueData,
+        clientSignature,
+        professionalSignature
+      );
+
+      // Atualizar status do agendamento
+      const updatedBookings = bookings.map(booking => 
+        booking.id === selectedBooking.id 
+          ? { 
+              ...booking, 
+              status: 'completed',
+              completedAt: new Date().toISOString(),
+              techniqueData: pendingTechniqueData,
+              clientSignature,
+              professionalSignature
+            }
+          : booking
+      );
+      setBookings(updatedBookings);
+      localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+
+      // Salvar dados completos do serviço
+      const completedServices = JSON.parse(localStorage.getItem('completedServices') || '[]');
+      const serviceData = {
+        id: Date.now().toString(),
+        bookingId: selectedBooking.id,
+        clientId: selectedBooking.userId,
+        clientName: selectedBooking.clientName,
+        serviceName: selectedBooking.serviceName,
+        date: selectedBooking.date,
+        time: selectedBooking.time,
+        price: selectedBooking.price,
+        questionnaireData: selectedBooking.questionnaireData,
+        techniqueData: pendingTechniqueData,
+        clientSignature,
+        professionalSignature,
+        pdfGenerated: true,
+        completedAt: new Date().toISOString()
+      };
+      completedServices.push(serviceData);
+      localStorage.setItem('completedServices', JSON.stringify(completedServices));
+
+      // Fechar modais e resetar estados
+      setShowSignatureModal(false);
+      setSelectedBooking(null);
+      setPendingTechniqueData(null);
+      setClientSignature(null);
+      setProfessionalSignature(null);
+
+      // Baixar PDF automaticamente
+      pdf.save(`termo-servico-${selectedBooking.clientName}-${selectedBooking.date}.pdf`);
+
+      // Mostrar opções de envio
+      setShowModal('sendOptions');
+      setFormData({
+        serviceData,
+        pdfData: pdf.getDataURL()
+      });
+
+      alert('Serviço finalizado com sucesso! O termo foi gerado e está sendo baixado.');
+      
+    } catch (error) {
+      console.error('Erro ao finalizar serviço:', error);
+      alert('Erro ao gerar o termo. Tente novamente.');
+    }
+  };
+
+  const handleSendPDF = async (method) => {
+    const { serviceData, pdfData } = formData;
+    
+    try {
+      switch (method) {
+        case 'email':
+          // Simulação de envio por email
+          await sendByEmail(serviceData, pdfData);
+          break;
+        case 'whatsapp':
+          // Simulação de envio por WhatsApp
+          await sendByWhatsApp(serviceData, pdfData);
+          break;
+        case 'print':
+          // Abrir para impressão
+          printPDF(pdfData);
+          break;
+      }
+      alert(`Termo enviado via ${method} com sucesso!`);
+      closeModal();
+    } catch (error) {
+      alert(`Erro ao enviar via ${method}. Tente novamente.`);
+    }
+  };
+
+  const sendByEmail = async (serviceData, pdfData) => {
+    // Integração com serviço de email seria implementada aqui
+    console.log('Enviando por email:', serviceData);
+    // Simulação de delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  };
+
+  const sendByWhatsApp = async (serviceData, pdfData) => {
+    // Integração com WhatsApp API seria implementada aqui
+    console.log('Enviando por WhatsApp:', serviceData);
+    // Simulação de delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  };
+
+  const printPDF = (pdfData) => {
+    const win = window.open();
+    win.document.write(`<iframe src="${pdfData}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
   };
 
   const handlePhotoUpload = (e) => {
@@ -1343,6 +1491,7 @@ const AdminDashboard = () => {
                   <th style={{ padding: '15px', textAlign: 'left' }}>Valor</th>
                   <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
                   <th style={{ padding: '15px', textAlign: 'left' }}>Tipo</th>
+                  <th style={{ padding: '15px', textAlign: 'left' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1378,6 +1527,34 @@ const AdminDashboard = () => {
                             fontSize: '0.8rem' 
                           }}>
                             Comercial
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '15px' }}>
+                        {booking.status === 'confirmed' && (
+                          <button
+                            onClick={() => handleFinishService(booking)}
+                            style={{
+                              background: '#FFD700',
+                              color: '#000',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            ✅ Finalizar
+                          </button>
+                        )}
+                        {booking.status === 'completed' && (
+                          <span style={{ 
+                            color: '#4CAF50', 
+                            fontSize: '0.8rem',
+                            fontWeight: '600'
+                          }}>
+                            ✅ Concluído
                           </span>
                         )}
                       </td>
@@ -1436,6 +1613,223 @@ const AdminDashboard = () => {
 
       {activeTab === 'automation' && (
         <AutomationPanel />
+      )}
+
+      {/* Modal do Formulário de Técnica Aplicada */}
+      {showTechniqueForm && selectedBooking && (
+        <TechniqueForm
+          booking={selectedBooking}
+          onComplete={handleTechniqueFormComplete}
+          onCancel={() => setShowTechniqueForm(false)}
+        />
+      )}
+
+      {/* Modal de Assinaturas */}
+      {showSignatureModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            ...getCardStyle(true),
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <div className="card-header">
+              <span className="card-icon">✍️</span>
+              <h3 className="card-title">Assinaturas do Termo</h3>
+              <button
+                onClick={() => setShowSignatureModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#FFD700',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  marginLeft: 'auto'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 0' }}>
+              <SignaturePad
+                title="Assinatura do Cliente *"
+                onSignatureChange={setClientSignature}
+                initialSignature={clientSignature}
+              />
+              
+              <SignaturePad
+                title="Assinatura do Profissional"
+                onSignatureChange={setProfessionalSignature}
+                initialSignature={professionalSignature}
+              />
+
+              <div style={{
+                background: 'rgba(255, 215, 0, 0.1)',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '8px',
+                padding: '15px',
+                marginTop: '20px'
+              }}>
+                <p style={{ 
+                  color: '#FFD700', 
+                  fontSize: '0.9rem', 
+                  margin: 0,
+                  lineHeight: '1.4'
+                }}>
+                  ℹ️ <strong>Importante:</strong> A assinatura do cliente é obrigatória para gerar o termo. A assinatura do profissional é opcional mas recomendada.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button
+                  onClick={() => setShowSignatureModal(false)}
+                  style={{
+                    ...getButtonStyle('secondary'),
+                    padding: '12px 24px'
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSignaturesComplete}
+                  disabled={!clientSignature}
+                  style={{
+                    ...getButtonStyle('primary'),
+                    padding: '12px 24px',
+                    opacity: !clientSignature ? 0.5 : 1
+                  }}
+                >
+                  Gerar Termo PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Opções de Envio */}
+      {showModal === 'sendOptions' && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            ...getCardStyle(true),
+            width: '100%',
+            maxWidth: '500px'
+          }}>
+            <div className="card-header">
+              <span className="card-icon">📤</span>
+              <h3 className="card-title">Enviar Termo para Cliente</h3>
+              <button
+                onClick={closeModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#FFD700',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  marginLeft: 'auto'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 0' }}>
+              <p style={{ 
+                color: 'white', 
+                marginBottom: '20px',
+                lineHeight: '1.4'
+              }}>
+                O termo foi gerado com sucesso! Escolha como deseja enviar para o cliente:
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <button
+                  onClick={() => handleSendPDF('email')}
+                  style={{
+                    ...getButtonStyle('primary'),
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>📧</span>
+                  Enviar por E-mail
+                </button>
+
+                <button
+                  onClick={() => handleSendPDF('whatsapp')}
+                  style={{
+                    ...getButtonStyle('primary'),
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    justifyContent: 'flex-start',
+                    background: '#25D366'
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>📱</span>
+                  Enviar via WhatsApp
+                </button>
+
+                <button
+                  onClick={() => handleSendPDF('print')}
+                  style={{
+                    ...getButtonStyle('secondary'),
+                    padding: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>🖨️</span>
+                  Imprimir Termo
+                </button>
+              </div>
+
+              <button
+                onClick={closeModal}
+                style={{
+                  ...getButtonStyle('secondary'),
+                  width: '100%',
+                  padding: '12px',
+                  marginTop: '20px'
+                }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
