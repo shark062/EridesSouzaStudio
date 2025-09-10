@@ -38,6 +38,31 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadData();
     loadServices();
+
+    // Listener para sincronização automática
+    const handleDataSync = () => {
+      console.log('🔄 Dados sincronizados - recarregando dashboard admin');
+      loadData();
+      loadServices();
+    };
+
+    window.addEventListener('dataSync', handleDataSync);
+    
+    // Listener para mudanças no localStorage
+    const handleStorageChange = (e) => {
+      if (e.key === 'userBookings' || e.key === 'registeredUsers' || e.key === 'services') {
+        console.log('📱 Dados atualizados em outro dispositivo');
+        loadData();
+        loadServices();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('dataSync', handleDataSync);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const loadData = () => {

@@ -28,6 +28,9 @@ export const AuthProvider = ({ children }) => {
     try {
       setSyncStatus('syncing');
       
+      // Primeiro, enviar dados locais para o servidor
+      await pushLocalDataToServer();
+      
       // Buscar dados do servidor
       const response = await fetch(`${SYNC_CONFIG.apiBase}/sync`, {
         method: 'GET',
@@ -40,28 +43,79 @@ export const AuthProvider = ({ children }) => {
         const serverData = await response.json();
         
         // Sincronizar usuários
-        if (serverData.users) {
-          localStorage.setItem('registeredUsers', JSON.stringify(serverData.users));
+        if (serverData.users && Array.isArray(serverData.users)) {
+          const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+          const mergedUsers = mergeArraysById(localUsers, serverData.users);
+          localStorage.setItem('registeredUsers', JSON.stringify(mergedUsers));
         }
         
-        // Sincronizar agendamentos
-        if (serverData.bookings) {
-          localStorage.setItem('bookings', JSON.stringify(serverData.bookings));
+        // Sincronizar agendamentos - usar 'userBookings' como chave padrão
+        if (serverData.bookings && Array.isArray(serverData.bookings)) {
+          const localBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+          const mergedBookings = mergeArraysById(localBookings, serverData.bookings);
+          localStorage.setItem('userBookings', JSON.stringify(mergedBookings));
+          // Manter compatibilidade com outras chaves
+          localStorage.setItem('bookings', JSON.stringify(mergedBookings));
         }
         
         // Sincronizar serviços
-        if (serverData.services) {
+        if (serverData.services && Array.isArray(serverData.services)) {
           localStorage.setItem('services', JSON.stringify(serverData.services));
         }
         
         setSyncStatus('connected');
         console.log('✅ Dados sincronizados com sucesso');
+        
+        // Disparar evento personalizado para notificar componentes
+        window.dispatchEvent(new CustomEvent('dataSync', { 
+          detail: { users: true, bookings: true, services: true } 
+        }));
+        
       } else {
         throw new Error('Falha na sincronização');
       }
     } catch (error) {
       console.log('📱 Modo offline - dados locais mantidos');
       setSyncStatus('offline');
+    }
+  };
+
+  // Função para mesclar arrays por ID, evitando duplicatas
+  const mergeArraysById = (localArray, serverArray) => {
+    const merged = [...localArray];
+    const localIds = new Set(localArray.map(item => item.id));
+    
+    serverArray.forEach(item => {
+      if (!localIds.has(item.id)) {
+        merged.push(item);
+      }
+    });
+    
+    return merged;
+  };
+
+  // Função para enviar dados locais para servidor
+  const pushLocalDataToServer = async () => {
+    try {
+      // Enviar usuários
+      const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      if (localUsers.length > 0) {
+        await pushDataToServer('users', localUsers);
+      }
+
+      // Enviar agendamentos
+      const localBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+      if (localBookings.length > 0) {
+        await pushDataToServer('bookings', localBookings);
+      }
+
+      // Enviar serviços
+      const localServices = JSON.parse(localStorage.getItem('services') || '[]');
+      if (localServices.length > 0) {
+        await pushDataToServer('services', localServices);
+      }
+    } catch (error) {
+      console.log('📱 Dados ficaram locais, sincronizarão quando conectar');
     }
   };
 
@@ -108,13 +162,31 @@ export const AuthProvider = ({ children }) => {
       }
     };
     
+    // Listener para mudanças no localStorage de outros dispositivos/abas
+    const handleStorageChange = (e) => {
+      if (['userBookings', 'registeredUsers', 'services'].includes(e.key)) {
+        console.log('🔄 Dados alterados em outro dispositivo/aba');
+        syncWithServer();
+      }
+    };
+    
+    // Listener para conexão de rede
+    const handleOnline = () => {
+      console.log('🌐 Conexão restaurada - sincronizando...');
+      syncWithServer();
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('online', handleOnline);
     
     setLoading(false);
 
     return () => {
       clearInterval(syncInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 

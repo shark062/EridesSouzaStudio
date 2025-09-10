@@ -119,13 +119,20 @@ def api_sync_users():
     global users_db
     data = request.get_json()
     if isinstance(data, list):
-        # Mesclar usuários únicos
-        existing_ids = {user.get('id') for user in users_db}
+        # Mesclar usuários únicos por ID
+        existing_ids = {str(user.get('id')) for user in users_db if user.get('id')}
+        new_users = []
+        
         for user in data:
-            if user.get('id') not in existing_ids:
-                users_db.append(user)
+            user_id = str(user.get('id', ''))
+            if user_id and user_id not in existing_ids:
+                new_users.append(user)
+                existing_ids.add(user_id)
+        
+        users_db.extend(new_users)
         save_data()
-    return jsonify({'success': True, 'count': len(users_db)})
+        print(f"✅ Sincronizados {len(new_users)} novos usuários. Total: {len(users_db)}")
+    return jsonify({'success': True, 'count': len(users_db), 'new': len(new_users) if 'new_users' in locals() else 0})
 
 # Endpoint para sincronizar agendamentos
 @app.route('/api/sync/bookings', methods=['POST'])
@@ -133,13 +140,20 @@ def api_sync_bookings():
     global bookings_db
     data = request.get_json()
     if isinstance(data, list):
-        # Mesclar agendamentos únicos
-        existing_ids = {booking.get('id') for booking in bookings_db}
+        # Mesclar agendamentos únicos por ID
+        existing_ids = {str(booking.get('id')) for booking in bookings_db if booking.get('id')}
+        new_bookings = []
+        
         for booking in data:
-            if booking.get('id') not in existing_ids:
-                bookings_db.append(booking)
+            booking_id = str(booking.get('id', ''))
+            if booking_id and booking_id not in existing_ids:
+                new_bookings.append(booking)
+                existing_ids.add(booking_id)
+        
+        bookings_db.extend(new_bookings)
         save_data()
-    return jsonify({'success': True, 'count': len(bookings_db)})
+        print(f"✅ Sincronizados {len(new_bookings)} novos agendamentos. Total: {len(bookings_db)}")
+    return jsonify({'success': True, 'count': len(bookings_db), 'new': len(new_bookings) if 'new_bookings' in locals() else 0})
 
 # Endpoint para sincronizar serviços
 @app.route('/api/sync/services', methods=['POST'])
