@@ -5,9 +5,10 @@ const AuthContext = createContext();
 // Configuração de sincronização de dados
 const SYNC_CONFIG = {
   apiBase: `${window.location.protocol}//${window.location.hostname}:3000/api`,
-  syncInterval: 10000, // 10 segundos para melhor sincronização
-  maxRetries: 5,
-  retryDelay: 2000
+  syncInterval: 60000, // 1 minuto
+  maxRetries: 3,
+  retryDelay: 5000, // 5 segundos
+  timeout: 10000 // 10 segundos
 };
 
 export const useAuth = () => {
@@ -22,21 +23,24 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [syncStatus, setSyncStatus] = useState('disconnected');
+  const [syncStatus, setSyncStatus] = useState('connected'); // Sync status initialized to 'connected' for silent background operation
 
   // Funções de sincronização melhoradas
   const syncWithServer = async (retryCount = 0) => {
     try {
-      setSyncStatus('syncing');
+      // Sincronização silenciosa em segundo plano
+      if (retryCount === 0) {
+        setSyncStatus('connected');
+      }
       console.log('🔄 Iniciando sincronização...', { attempt: retryCount + 1 });
-      
+
       // Primeiro, enviar dados locais para o servidor
       await pushLocalDataToServer();
-      
+
       // Buscar dados do servidor com timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
-      
+      const timeoutId = setTimeout(() => controller.abort(), SYNC_CONFIG.timeout); // Use configured timeout
+
       const response = await fetch(`${SYNC_CONFIG.apiBase}/sync`, {
         method: 'GET',
         headers: {
@@ -54,7 +58,7 @@ export const AuthProvider = ({ children }) => {
           bookings: serverData.bookings?.length || 0,
           services: serverData.services?.length || 0
         });
-        
+
         // Sincronizar usuários
         if (serverData.users && Array.isArray(serverData.users)) {
           const localUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
@@ -62,12 +66,12 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('registeredUsers', JSON.stringify(mergedUsers));
           console.log('👥 Usuários sincronizados:', mergedUsers.length);
         }
-        
+
         // Sincronizar agendamentos - garantir compatibilidade com múltiplas chaves
         if (serverData.bookings && Array.isArray(serverData.bookings)) {
           const sources = ['userBookings', 'bookings', 'allBookings'];
           let localBookings = [];
-          
+
           // Coletar agendamentos de todas as fontes
           sources.forEach(source => {
             const sourceData = JSON.parse(localStorage.getItem(source) || '[]');
@@ -75,31 +79,31 @@ export const AuthProvider = ({ children }) => {
               localBookings = localBookings.concat(sourceData);
             }
           });
-          
+
           // Remover duplicatas baseado no ID
           const uniqueLocalBookings = localBookings.filter((booking, index, self) => 
             index === self.findIndex(b => b.id === booking.id)
           );
-          
+
           const mergedBookings = mergeArraysById(uniqueLocalBookings, serverData.bookings);
-          
+
           // Salvar em todas as chaves para compatibilidade
           localStorage.setItem('userBookings', JSON.stringify(mergedBookings));
           localStorage.setItem('bookings', JSON.stringify(mergedBookings));
           localStorage.setItem('allBookings', JSON.stringify(mergedBookings));
-          
+
           console.log('📋 Agendamentos sincronizados:', mergedBookings.length);
         }
-        
+
         // Sincronizar serviços
         if (serverData.services && Array.isArray(serverData.services)) {
           localStorage.setItem('services', JSON.stringify(serverData.services));
           console.log('💅 Serviços sincronizados:', serverData.services.length);
         }
-        
+
         setSyncStatus('connected');
         console.log('✅ Sincronização completa com sucesso');
-        
+
         // Disparar evento personalizado para notificar componentes
         window.dispatchEvent(new CustomEvent('dataSync', { 
           detail: { 
@@ -109,26 +113,26 @@ export const AuthProvider = ({ children }) => {
             timestamp: Date.now() 
           } 
         }));
-        
+
         return true;
-        
+
       } else {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
       console.warn('⚠️ Erro na sincronização:', error.message);
-      
+
       // Tentar novamente em caso de erro
-      if (retryCount < SYNC_CONFIG.maxRetries) {
+      if (retryCount < SYNC_CONFIG.maxRetries) { // Use configured max retries
         console.log(`🔄 Tentando novamente em ${SYNC_CONFIG.retryDelay/1000}s... (${retryCount + 1}/${SYNC_CONFIG.maxRetries})`);
         setTimeout(() => {
           syncWithServer(retryCount + 1);
-        }, SYNC_CONFIG.retryDelay);
+        }, SYNC_CONFIG.retryDelay); // Use configured retry delay
       } else {
         console.log('📱 Modo offline - dados locais mantidos');
         setSyncStatus('offline');
       }
-      
+
       return false;
     }
   };
@@ -137,13 +141,13 @@ export const AuthProvider = ({ children }) => {
   const mergeArraysById = (localArray, serverArray) => {
     const merged = [...localArray];
     const localIds = new Set(localArray.map(item => item.id));
-    
+
     serverArray.forEach(item => {
       if (!localIds.has(item.id)) {
         merged.push(item);
       }
     });
-    
+
     return merged;
   };
 
@@ -183,7 +187,7 @@ export const AuthProvider = ({ children }) => {
   const pushDataToServer = async (dataType, data) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), SYNC_CONFIG.timeout); // Use configured timeout
 
       const response = await fetch(`${SYNC_CONFIG.apiBase}/sync/${dataType}`, {
         method: 'POST',
@@ -212,11 +216,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let syncIntervalId;
     let retryTimeoutId;
-    
+
     // Verificar se há usuário logado no localStorage
     const savedUser = localStorage.getItem('user');
     const savedIsAdmin = localStorage.getItem('isAdmin') === 'true';
-    
+
     if (savedUser) {
       setUser(JSON.parse(savedUser));
       setIsAdmin(savedIsAdmin);
@@ -225,19 +229,19 @@ export const AuthProvider = ({ children }) => {
     // Função para iniciar sincronização com retry
     const startSync = async () => {
       const success = await syncWithServer();
-      
+
       if (success) {
         // Se sincronização foi bem-sucedida, configurar intervalo regular
-        syncIntervalId = setInterval(syncWithServer, SYNC_CONFIG.syncInterval);
+        syncIntervalId = setInterval(syncWithServer, SYNC_CONFIG.syncInterval); // Use configured sync interval
       } else {
         // Se falhou, tentar novamente em breve
-        retryTimeoutId = setTimeout(startSync, SYNC_CONFIG.retryDelay);
+        retryTimeoutId = setTimeout(startSync, SYNC_CONFIG.retryDelay); // Use configured retry delay
       }
     };
 
     // Iniciar sincronização
     startSync();
-    
+
     // Listener para detectar quando a aba fica ativa
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -245,7 +249,7 @@ export const AuthProvider = ({ children }) => {
         syncWithServer();
       }
     };
-    
+
     // Listener para mudanças no localStorage de outros dispositivos/abas
     const handleStorageChange = (e) => {
       const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services'];
@@ -254,7 +258,7 @@ export const AuthProvider = ({ children }) => {
         setTimeout(syncWithServer, 1000); // Delay para evitar conflitos
       }
     };
-    
+
     // Listener para conexão de rede
     const handleOnline = () => {
       console.log('🌐 Conexão restaurada - sincronizando...');
@@ -267,19 +271,19 @@ export const AuthProvider = ({ children }) => {
       console.log('📱 Conexão perdida - modo offline');
       setSyncStatus('offline');
     };
-    
+
     // Listener personalizado para forçar sincronização
     const handleForceSync = () => {
       console.log('🔄 Sincronização forçada solicitada');
       syncWithServer();
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('forceSync', handleForceSync);
-    
+
     setLoading(false);
 
     return () => {
@@ -312,7 +316,7 @@ export const AuthProvider = ({ children }) => {
     // Verificar usuários normais (simulado)
     const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
     const foundUser = users.find(u => u.username === username && u.password === password);
-    
+
     if (foundUser) {
       const userObj = {
         id: foundUser.id,
@@ -333,7 +337,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
+
     // Verificar se o usuário já existe
     if (users.find(u => u.username === userData.username || u.email === userData.email)) {
       return { success: false, message: 'Usuário já existe' };
@@ -349,10 +353,10 @@ export const AuthProvider = ({ children }) => {
 
     users.push(newUser);
     localStorage.setItem('registeredUsers', JSON.stringify(users));
-    
+
     // Tentar sincronizar com servidor
     await pushDataToServer('users', users);
-    
+
     return { success: true, message: 'Usuário registrado com sucesso' };
   };
 
@@ -360,7 +364,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
       const userIndex = users.findIndex(u => u.id === user.id);
-      
+
       if (userIndex === -1) {
         return { success: false, message: 'Usuário não encontrado' };
       }
@@ -373,11 +377,11 @@ export const AuthProvider = ({ children }) => {
 
       users[userIndex] = updatedUser;
       localStorage.setItem('registeredUsers', JSON.stringify(users));
-      
+
       // Atualizar usuário logado
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+
       return { success: true, message: 'Perfil atualizado com sucesso' };
     } catch (error) {
       return { success: false, message: 'Erro ao atualizar perfil' };

@@ -234,7 +234,7 @@ const AdminDashboard = () => {
 
   const handlePreviewConfirm = () => {
     setShowPDFPreview(false);
-    setShowSignatureModal(true);
+    setShowTechniqueForm(true);
   };
 
   const handlePreviewCancel = () => {
@@ -550,7 +550,7 @@ const AdminDashboard = () => {
   // Função para regenerar o termo de agendamentos concluídos
   const handleGenerateCompletedTerm = async (booking) => {
     console.log('🚀 Iniciando geração de termo PDF...');
-    
+
     if (!booking) {
       console.error('❌ Booking não fornecido');
       alert('Dados do agendamento não encontrados.');
@@ -646,7 +646,7 @@ const AdminDashboard = () => {
       };
 
       console.log('🔧 Verificando PDFGenerator:', PDFGenerator);
-      
+
       if (!PDFGenerator) {
         console.error('❌ PDFGenerator não encontrado!');
         alert('Erro: Gerador de PDF não carregado. Recarregue a página.');
@@ -685,91 +685,31 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Status de Sincronização - Simplificado */}
+      {/* Painel de Controle Administrativo */}
       <div style={{
         background: 'rgba(0, 0, 0, 0.3)',
         backdropFilter: 'blur(10px)',
         border: '1px solid rgba(255, 215, 0, 0.3)',
         borderRadius: '16px',
         padding: '20px',
-        marginBottom: '30px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '15px'
+        marginBottom: '30px'
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px'
+        <h2 style={{
+          color: '#FFD700',
+          margin: '0 0 10px 0',
+          fontSize: '1.4rem',
+          textAlign: 'center'
         }}>
-          <div style={{
-            background: syncStatus === 'connected' ? 'rgba(76, 175, 80, 0.2)' : 
-                       syncStatus === 'syncing' ? 'rgba(255, 193, 7, 0.2)' : 
-                       'rgba(244, 67, 54, 0.2)',
-            border: `1px solid ${syncStatus === 'connected' ? '#4CAF50' : 
-                                 syncStatus === 'syncing' ? '#FFC107' : 
-                                 '#F44336'}`,
-            borderRadius: '20px',
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '0.9rem',
-            fontWeight: 'bold'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>
-              {syncStatus === 'connected' ? '🟢' : 
-               syncStatus === 'syncing' ? '🟡' : '🔴'}
-            </span>
-            <span style={{
-              color: syncStatus === 'connected' ? '#4CAF50' : 
-                     syncStatus === 'syncing' ? '#FFC107' : 
-                     '#F44336'
-            }}>
-              {syncStatus === 'connected' ? 'Conectado' : 
-               syncStatus === 'syncing' ? 'Sincronizando...' : 
-               'Offline'}
-            </span>
-          </div>
-
-          {lastSyncTime && (
-            <div style={{
-              background: 'rgba(33, 150, 243, 0.1)',
-              border: '1px solid rgba(33, 150, 243, 0.3)',
-              borderRadius: '15px',
-              padding: '6px 12px',
-              fontSize: '0.8rem',
-              color: '#2196F3'
-            }}>
-              Última sync: {lastSyncTime.toLocaleTimeString()}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={() => {
-            console.log('🔄 Forçando sincronização manual...');
-            syncWithServer();
-            window.dispatchEvent(new Event('forceSync'));
-          }}
-          style={{
-            background: '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '8px 16px',
-            cursor: 'pointer',
-            fontSize: '0.8rem',
-            fontWeight: 'bold',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px'
-          }}
-        >
-          🔄 Sincronizar
-        </button>
+          ⚡ Painel Administrativo
+        </h2>
+        <p style={{
+          color: 'rgba(255, 255, 255, 0.8)',
+          margin: '0',
+          textAlign: 'center',
+          fontSize: '0.9rem'
+        }}>
+          Gerencie todos os aspectos do seu salão de forma eficiente
+        </p>
       </div>
 
       {/* Modais */}

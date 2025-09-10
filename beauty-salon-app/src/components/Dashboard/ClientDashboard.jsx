@@ -315,7 +315,7 @@ const ClientDashboard = () => {
         </div>
       </div>
 
-      {/* Barra de Notificações e Chat */}
+      {/* Barra de Saudação e Ações */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
