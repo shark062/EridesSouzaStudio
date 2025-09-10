@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
 import n8nService from '../../services/n8nService';
+import MedicalQuestionnaire from './MedicalQuestionnaire';
 
 const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
     time: '',
     notes: ''
   });
+  const [questionnaireData, setQuestionnaireData] = useState({});
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -76,6 +79,7 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
         price: finalPrice,
         originalPrice: service.price,
         notes: formData.notes,
+        questionnaireData: questionnaireData,
         status: 'confirmed',
         createdAt: new Date().toISOString(),
         birthdayDiscount: isBirthday
@@ -142,11 +146,111 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
     });
   };
 
+  const handleQuestionnaireComplete = (data) => {
+    setQuestionnaireData(data);
+  };
+
+  const handleNext = () => {
+    if (!formData.serviceId) {
+      setMessage('Por favor, selecione um serviço primeiro.');
+      return;
+    }
+    setShowQuestionnaire(true);
+    setMessage('');
+  };
+
+  const handleBack = () => {
+    setShowQuestionnaire(false);
+  };
+
+  if (showQuestionnaire) {
+    return (
+      <div>
+        <div className="dashboard-card" style={getCardStyle(true)}>
+          <div className="card-header">
+            <span className="card-icon">📅</span>
+            <h3 className="card-title">Agendar Serviço - Etapa 2 de 2</h3>
+          </div>
+          <div style={{ padding: '10px 0' }}>
+            <button
+              onClick={handleBack}
+              style={{
+                ...getButtonStyle('secondary'),
+                marginBottom: '20px'
+              }}
+            >
+              ← Voltar aos dados do agendamento
+            </button>
+          </div>
+        </div>
+        
+        <MedicalQuestionnaire 
+          onComplete={handleQuestionnaireComplete}
+          initialData={questionnaireData}
+        />
+        
+        <div className="dashboard-card" style={getCardStyle(true)}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {selectedService && (
+              <div style={{
+                background: 'rgba(255, 215, 0, 0.1)',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '8px',
+                padding: '15px'
+              }}>
+                <h4 style={{ color: '#FFD700', margin: '0 0 10px 0' }}>Resumo do Agendamento</h4>
+                <p style={{ margin: '5px 0', color: 'white' }}>
+                  <strong>Serviço:</strong> {selectedService.name}
+                </p>
+                <p style={{ margin: '5px 0', color: 'white' }}>
+                  <strong>Data:</strong> {formData.date} às {formData.time}
+                </p>
+                <p style={{ margin: '5px 0', color: 'white' }}>
+                  <strong>Valor:</strong> R$ {isBirthday ? (selectedService.price * 0.9).toFixed(2) : selectedService.price.toFixed(2)}
+                  {isBirthday && (
+                    <span style={{ marginLeft: '10px', color: '#4CAF50' }}>
+                      🎂 Desconto de aniversário aplicado!
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {message && (
+              <div style={{
+                padding: '15px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                fontWeight: '500',
+                background: message.includes('sucesso') ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                border: `1px solid ${message.includes('sucesso') ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`,
+                color: message.includes('sucesso') ? '#66BB6A' : '#FF6B6B'
+              }}>
+                {message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                ...getButtonStyle('primary'),
+                fontSize: '1rem'
+              }}
+            >
+              {loading ? 'Finalizando agendamento...' : 'Confirmar Agendamento'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-card" style={getCardStyle(true)}>
       <div className="card-header">
         <span className="card-icon">📅</span>
-        <h3 className="card-title">Agendar Serviço</h3>
+        <h3 className="card-title">Agendar Serviço - Etapa 1 de 2</h3>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -319,14 +423,15 @@ const BookingForm = ({ services, user, isBirthday, onBookingComplete }) => {
         )}
 
         <button
-          type="submit"
-          disabled={loading}
+          type="button"
+          onClick={handleNext}
+          disabled={!formData.serviceId || !formData.date || !formData.time}
           style={{
             ...getButtonStyle('primary'),
             fontSize: '1rem'
           }}
         >
-          {loading ? 'Agendando...' : 'Confirmar Agendamento'}
+          Próximo: Questionário Médico →
         </button>
       </form>
     </div>
