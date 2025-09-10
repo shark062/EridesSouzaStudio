@@ -163,7 +163,7 @@ const Header = () => {
           {isAdmin && <span className="admin-badge">ADMIN</span>}
         </div>
 
-        
+
 
         <div className="user-section">
           <div className="user-info">
@@ -221,7 +221,8 @@ const Header = () => {
                 boxShadow: '0 8px 25px rgba(255, 215, 0, 0.2)',
                 border: '1px solid rgba(255, 215, 0, 0.4)',
                 zIndex: 1000,
-                padding: '20px'
+                padding: '20px',
+                opacity: '0.2'
               }}>
                 <div style={{
                   display: 'flex',
@@ -443,28 +444,26 @@ const Header = () => {
                       {/* Seção Clientes */}
                       <button
                         onClick={() => {
+                          console.log('📋 Abrindo gerenciamento de clientes...');
                           window.location.hash = 'admin-clients';
                           setShowHamburgerMenu(false);
                         }}
                         style={{
                           width: '100%',
-                          padding: '15px',
-                          background: 'rgba(156, 39, 176, 0.1)',
-                          border: '2px solid #9C27B0',
-                          borderRadius: '12px',
+                          padding: '12px',
+                          background: 'transparent',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#9C27B0',
-                          textAlign: 'center',
-                          fontWeight: 'bold',
-                          marginBottom: '15px',
-                          fontSize: '0.85rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'all 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
                       >
-                        👥 CLIENTES
+                        Clientes
                       </button>
 
                       {/* Seção Automação */}
