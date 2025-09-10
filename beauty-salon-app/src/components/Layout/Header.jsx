@@ -149,24 +149,51 @@ const Header = () => {
         <div className="logo-section">
           <div className="brand-logo">
             <div className="logo-symbol" style={{
-              background: '#FFFFFF',
+              background: 'transparent',
               color: '#000000',
-              border: '2px solid #000000'
+              border: '3px solid #000000',
+              borderRadius: '8px',
+              width: '70px',
+              height: '70px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}>
-              <div className="pr-letters" style={{ color: '#000000' }}>ES</div>
+              <div className="pr-letters" style={{ 
+                color: '#000000', 
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                fontFamily: 'Arial, sans-serif'
+              }}>ES</div>
             </div>
             <h1 className="logo-text">
               <span className="primary-text" style={{
-                color: '#FFFFFF',
-                textShadow: 'none'
+                color: '#000000',
+                textShadow: 'none',
+                fontSize: '1.6rem',
+                fontWeight: 'bold',
+                letterSpacing: '3px'
               }}>ERIDES SOUZA</span>
               <span className="secondary-text" style={{
-                color: '#FFFFFF',
-                textShadow: 'none'
+                color: '#000000',
+                textShadow: 'none',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                letterSpacing: '5px',
+                marginTop: '-5px'
               }}>ESTÚDIO</span>
             </h1>
           </div>
-          {isAdmin && <span className="admin-badge">ADMIN</span>}
+          {isAdmin && <span className="admin-badge" style={{
+            background: '#000000',
+            color: '#FFFFFF',
+            padding: '6px 14px',
+            borderRadius: '20px',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            letterSpacing: '1px',
+            border: '2px solid #000000'
+          }}>ADMIN</span>}
         </div>
 
 

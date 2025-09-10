@@ -2,13 +2,13 @@
 
 .app-header {
   background: linear-gradient(135deg, #F8F6F0 0%, #E8DCC0 50%, #D4B896 100%);
-  border-bottom: 2px solid rgba(139, 157, 131, 0.3);
+  border-bottom: 3px solid #000000;
   padding: 0;
   position: sticky;
   top: 0;
   z-index: 100;
   backdrop-filter: blur(10px);
-  box-shadow: 0 2px 20px rgba(139, 157, 131, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .header-content {
@@ -46,23 +46,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
-  border: 3px solid;
-  border-image: linear-gradient(135deg, #8B9D83, #D4B896) 1;
+  width: 70px;
+  height: 70px;
+  border: 3px solid #000000;
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(139, 157, 131, 0.2), rgba(212, 184, 150, 0.3));
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.logo-symbol:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.05);
 }
 
 .pr-letters {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: bold;
   font-family: 'Arial', sans-serif;
-  background: linear-gradient(135deg, #6B7A63 0%, #B8860B 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #000000;
   letter-spacing: -2px;
+  text-shadow: none;
 }
 
 .logo-text {
@@ -73,28 +76,37 @@
 }
 
 .primary-text {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: bold;
-  color: #6B7A63;
-  letter-spacing: 2px;
+  color: #000000;
+  letter-spacing: 3px;
+  text-shadow: none;
 }
 
 .secondary-text {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  color: #8B9D83;
-  letter-spacing: 4px;
-  margin-top: -2px;
+  color: #000000;
+  letter-spacing: 5px;
+  margin-top: -5px;
+  text-shadow: none;
 }
 
 .admin-badge {
-  background: linear-gradient(135deg, #8B9D83, #6B7A63);
-  color: #F8F6F0;
-  padding: 4px 12px;
+  background: #000000;
+  color: #FFFFFF;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: bold;
   letter-spacing: 1px;
+  border: 2px solid #000000;
+  transition: all 0.3s ease;
+}
+
+.admin-badge:hover {
+  background: #FFFFFF;
+  color: #000000;
 }
 
 .user-section {
@@ -105,19 +117,21 @@
 
 .user-info {
   text-align: right;
-  color: #6B7A63;
+  color: #000000;
 }
 
 .welcome-text {
   display: block;
   font-weight: 600;
-  color: #8B9D83;
+  color: #000000;
+  text-shadow: none;
 }
 
 .user-role {
   display: block;
   font-size: 0.9rem;
-  color: rgba(107, 122, 99, 0.7);
+  color: rgba(0, 0, 0, 0.7);
+  text-shadow: none;
 }
 
 .logout-button {
@@ -162,6 +176,19 @@
 .main-layout {
   min-height: calc(100vh - 80px);
   background: linear-gradient(135deg, #F8F6F0 0%, #E8DCC0 50%, #D4B896 100%);
+  position: relative;
+}
+
+.main-layout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="rgba(0,0,0,0.02)"/><circle cx="80" cy="40" r="1" fill="rgba(0,0,0,0.02)"/><circle cx="40" cy="80" r="1" fill="rgba(0,0,0,0.02)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  pointer-events: none;
+  opacity: 0.3;
 }
 
 .dashboard-container {
