@@ -82,6 +82,13 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       value = value.replace(/(\d{2})(\d)/, '($1) $2');
       value = value.replace(/(\d{5})(\d)/, '$1-$2');
     }
+    
+    // Formatação automática para data de nascimento
+    if (e.target.name === 'birthDate') {
+      value = value.replace(/\D/g, '');
+      value = value.replace(/(\d{2})(\d)/, '$1/$2');
+      value = value.replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+    }
 
     setFormData({
       ...formData,
@@ -134,11 +141,12 @@ const RegisterForm = ({ onSwitchToLogin }) => {
               <div className="form-group">
                 <label htmlFor="birthDate">Data de Nascimento *</label>
                 <input
-                  type="date"
+                  type="text"
                   id="birthDate"
                   name="birthDate"
                   value={formData.birthDate}
                   onChange={handleChange}
+                  placeholder="DD/MM/AAAA"
                   required
                   className="auth-input"
                 />
