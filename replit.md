@@ -108,6 +108,8 @@ Aplicativo completo e funcional com todas as funcionalidades implementadas:
 ✅ **NOVO:** Sistema de geração de PDF com termo de serviço
 ✅ **NOVO:** Assinatura digital integrada (cliente e profissional)
 ✅ **NOVO:** Opções de envio por email, WhatsApp e impressão
+✅ **NOVO:** Ficha de cadastro completa com dados pessoais, endereço e documentos
+✅ **NOVO:** Sistema de edição de perfil para clientes
 
 ## Funcionalidades Médicas e Documentação
 
@@ -168,20 +170,43 @@ src/
 └── ...
 ```
 
+### Ficha de Cadastro Completa
+- **Localização**: Processo de registro de novo usuário
+- **Seções organizadas**: Dados pessoais, endereço, documentos, contato e acesso
+- **Formatação automática**: CPF, CEP e telefone com máscaras de entrada
+- **Campos da ficha de anamnese**: Nome, idade, ocupação, indicação, endereço, CEP, CPF, RG, contato
+- **Validação**: Campos obrigatórios marcados e validação de formulário
+
+### Sistema de Edição de Perfil
+- **Acesso**: Dashboard do cliente → Botão "Editar Perfil"
+- **Modal completo**: Permite edição de todos os dados pessoais
+- **Atualização em tempo real**: Dados salvos no localStorage e contexto de autenticação
+- **Interface intuitiva**: Seções organizadas com formatação automática
+
 ## Fluxo Completo do Processo
 
-1. **Cliente faz agendamento**:
+1. **Cliente se cadastra**:
+   - Preenche ficha completa de anamnese no registro
+   - Dados organizados em seções: pessoais, endereço, documentos, contato
+   - Conta criada com todos os dados salvos
+
+2. **Cliente faz agendamento**:
    - Etapa 1: Seleciona serviço, data e horário
    - Etapa 2: Preenche questionário de anamnese médica
    - Confirmação: Agendamento salvo com todos os dados
 
-2. **Profissional realiza o serviço**:
+3. **Cliente pode editar perfil**:
+   - Acessa dashboard e clica em "Editar Perfil"
+   - Atualiza informações pessoais quando necessário
+   - Alterações salvas automaticamente
+
+4. **Profissional realiza o serviço**:
    - Acessa painel administrativo
    - Clica em "Finalizar" no agendamento confirmado
    - Preenche formulário de técnica aplicada
    - Captura assinaturas (cliente obrigatória, profissional opcional)
 
-3. **Geração e envio do termo**:
+5. **Geração e envio do termo**:
    - PDF gerado automaticamente com todos os dados
    - Download automático do arquivo
    - Opções de envio: email, WhatsApp ou impressão
