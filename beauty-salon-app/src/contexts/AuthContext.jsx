@@ -87,6 +87,34 @@ export const AuthProvider = ({ children }) => {
     return { success: true, message: 'Usuário registrado com sucesso' };
   };
 
+  const updateUserProfile = async (updatedData) => {
+    try {
+      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const userIndex = users.findIndex(u => u.id === user.id);
+      
+      if (userIndex === -1) {
+        return { success: false, message: 'Usuário não encontrado' };
+      }
+
+      // Atualizar dados do usuário
+      const updatedUser = {
+        ...users[userIndex],
+        ...updatedData
+      };
+
+      users[userIndex] = updatedUser;
+      localStorage.setItem('registeredUsers', JSON.stringify(users));
+      
+      // Atualizar usuário logado
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      return { success: true, message: 'Perfil atualizado com sucesso' };
+    } catch (error) {
+      return { success: false, message: 'Erro ao atualizar perfil' };
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setIsAdmin(false);
@@ -100,6 +128,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
+    updateUserProfile,
     logout
   };
 

@@ -5,6 +5,7 @@ import ServiceCard from '../Services/ServiceCard';
 import BookingForm from '../Booking/BookingForm';
 import RatingSystem from '../Rating/RatingSystem';
 import LoyaltySystem from '../Loyalty/LoyaltySystem';
+import UserProfile from './UserProfile';
 import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
@@ -13,6 +14,7 @@ const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState('services');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -309,6 +311,18 @@ const ClientDashboard = () => {
       }}>
         <h2 style={{ color: '#FFD700', margin: 0 }}>Olá, {user.name}! 👋</h2>
         <div style={{ display: 'flex', gap: '10px' }}>
+          {/* Botão Editar Perfil */}
+          <button
+            onClick={() => setShowProfileModal(true)}
+            style={{
+              ...getButtonStyle('primary'),
+              padding: '10px 15px',
+              fontSize: '0.9rem'
+            }}
+          >
+            👤 Editar Perfil
+          </button>
+          
           {/* Botão de Notificações */}
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -791,6 +805,11 @@ const ClientDashboard = () => {
           </h2>
           <LoyaltySystem />
         </div>
+      )}
+
+      {/* Modal de Edição de Perfil */}
+      {showProfileModal && (
+        <UserProfile onClose={() => setShowProfileModal(false)} />
       )}
     </div>
   );
