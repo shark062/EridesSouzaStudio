@@ -307,6 +307,54 @@ const Header = () => {
                     Alterar Senha
                   </button>
 
+                  {/* Notificações */}
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('toggleNotifications'));
+                      setShowHamburgerMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      color: '#FFFFFF',
+                      textAlign: 'left',
+                      fontSize: '0.9rem',
+                      transition: 'background 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                  >
+                    🔔 Notificações
+                  </button>
+
+                  {/* Suporte */}
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('toggleChat'));
+                      setShowHamburgerMenu(false);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      color: '#FFFFFF',
+                      textAlign: 'left',
+                      fontSize: '0.9rem',
+                      transition: 'background 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                  >
+                    💬 Suporte
+                  </button>
+
                   {isAdmin && (
                     <>
                       <div style={{ borderTop: '1px solid rgba(255, 215, 0, 0.3)', marginTop: '15px', paddingTop: '15px' }}>

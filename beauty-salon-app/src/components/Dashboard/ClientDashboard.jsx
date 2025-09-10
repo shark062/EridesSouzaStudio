@@ -118,10 +118,22 @@ const ClientDashboard = () => {
       setShowHamburgerMenu(event.detail?.isOpen || false);
     };
 
+    const handleToggleNotifications = () => {
+      setShowNotifications(!showNotifications);
+    };
+
+    const handleToggleChat = () => {
+      setChatOpen(!chatOpen);
+    };
+
     window.addEventListener('hamburgerMenuToggle', handleMenuToggle);
+    window.addEventListener('toggleNotifications', handleToggleNotifications);
+    window.addEventListener('toggleChat', handleToggleChat);
 
     return () => {
       window.removeEventListener('hamburgerMenuToggle', handleMenuToggle);
+      window.removeEventListener('toggleNotifications', handleToggleNotifications);
+      window.removeEventListener('toggleChat', handleToggleChat);
     };
   }, [user.id]);
 
@@ -315,74 +327,7 @@ const ClientDashboard = () => {
         </div>
       </div>
 
-      {/* Barra de Saudação e Ações */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-        padding: '15px',
-        background: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: '12px',
-        border: '1px solid rgba(255, 215, 0, 0.3)'
-      }}>
-        <h2 style={{ color: '#FFD700', margin: 0 }}>Olá, {user.name}! 👋</h2>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {/* Botão Editar Perfil */}
-          <button
-            onClick={() => setShowProfileModal(true)}
-            style={{
-              ...getButtonStyle('primary'),
-              padding: '10px 15px',
-              fontSize: '0.9rem'
-            }}
-          >
-            👤 Editar Perfil
-          </button>
-          
-          {/* Botão de Notificações */}
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            style={{
-              ...getButtonStyle('secondary'),
-              position: 'relative',
-              padding: '10px 15px'
-            }}
-          >
-            🔔 Notificações
-            {notifications.filter(n => !n.read).length > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                background: '#FF4444',
-                color: 'white',
-                borderRadius: '50%',
-                width: '20px',
-                height: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.7rem',
-                fontWeight: 'bold'
-              }}>
-                {notifications.filter(n => !n.read).length}
-              </span>
-            )}
-          </button>
-          
-          {/* Botão do Chat */}
-          <button
-            onClick={() => setChatOpen(!chatOpen)}
-            style={{
-              ...getButtonStyle('secondary'),
-              padding: '10px 15px'
-            }}
-          >
-            💬 Suporte
-          </button>
-        </div>
-      </div>
+      
 
       {/* Painel de Notificações */}
       {showNotifications && (
