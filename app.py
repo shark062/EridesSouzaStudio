@@ -136,7 +136,8 @@ def api_sync_users():
         users_db.extend(new_users)
         save_data()
         print(f"✅ Sincronizados {len(new_users)} novos usuários. Total: {len(users_db)}")
-    return jsonify({'success': True, 'count': len(users_db), 'new': len(new_users) if 'new_users' in locals() else 0})
+        return jsonify({'success': True, 'count': len(users_db), 'new': len(new_users)})
+    return jsonify({'success': True, 'count': len(users_db), 'new': 0})
 
 # Endpoint para sincronizar agendamentos
 @app.route('/api/sync/bookings', methods=['POST'])
@@ -157,7 +158,8 @@ def api_sync_bookings():
         bookings_db.extend(new_bookings)
         save_data()
         print(f"✅ Sincronizados {len(new_bookings)} novos agendamentos. Total: {len(bookings_db)}")
-    return jsonify({'success': True, 'count': len(bookings_db), 'new': len(new_bookings) if 'new_bookings' in locals() else 0})
+        return jsonify({'success': True, 'count': len(bookings_db), 'new': len(new_bookings)})
+    return jsonify({'success': True, 'count': len(bookings_db), 'new': 0})
 
 # Endpoint para sincronizar serviços
 @app.route('/api/sync/services', methods=['POST'])
