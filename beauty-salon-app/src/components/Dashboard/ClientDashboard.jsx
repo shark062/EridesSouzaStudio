@@ -126,14 +126,20 @@ const ClientDashboard = () => {
       setChatOpen(!chatOpen);
     };
 
+    const handleTabChange = (event) => {
+      setActiveTab(event.detail);
+    };
+
     window.addEventListener('hamburgerMenuToggle', handleMenuToggle);
     window.addEventListener('toggleNotifications', handleToggleNotifications);
     window.addEventListener('toggleChat', handleToggleChat);
+    window.addEventListener('changeTab', handleTabChange);
 
     return () => {
       window.removeEventListener('hamburgerMenuToggle', handleMenuToggle);
       window.removeEventListener('toggleNotifications', handleToggleNotifications);
       window.removeEventListener('toggleChat', handleToggleChat);
+      window.removeEventListener('changeTab', handleTabChange);
     };
   }, [user.id]);
 
@@ -514,25 +520,7 @@ const ClientDashboard = () => {
         </div>
       )}
 
-      <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['services', 'bookings', 'schedule', 'history', 'loyalty'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              ...getButtonStyle(activeTab === tab ? 'primary' : 'secondary'),
-              marginRight: '10px',
-              fontSize: '0.9rem'
-            }}
-          >
-            {tab === 'services' && '💅 Serviços'}
-            {tab === 'bookings' && '📅 Agendamentos'}
-            {tab === 'schedule' && '⏰ Agendar'}
-            {tab === 'history' && '📋 Histórico'}
-            {tab === 'loyalty' && '🏆 Fidelidade'}
-          </button>
-        ))}
-      </div>
+      
 
       {activeTab === 'services' && (
         <div>

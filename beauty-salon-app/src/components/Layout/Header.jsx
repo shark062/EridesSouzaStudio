@@ -307,6 +307,133 @@ const Header = () => {
                     Alterar Senha
                   </button>
 
+                  {/* Seção de Navegação Principal */}
+                  {!isAdmin && (
+                    <>
+                      <div style={{ borderTop: '1px solid rgba(255, 215, 0, 0.3)', marginTop: '15px', paddingTop: '15px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '0.9rem', textAlign: 'center' }}>
+                          Navegação Principal
+                        </h4>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'services' }));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        💅 Serviços
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'bookings' }));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        📅 Agendamentos
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'schedule' }));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        ⏰ Agendar
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'history' }));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        📋 Histórico
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'loyalty' }));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease',
+                          marginBottom: '15px'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        🏆 Fidelidade
+                      </button>
+                    </>
+                  )}
+
                   {/* Notificações */}
                   <button
                     onClick={() => {
