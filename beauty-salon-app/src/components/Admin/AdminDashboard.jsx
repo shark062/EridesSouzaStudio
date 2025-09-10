@@ -249,7 +249,9 @@ const AdminDashboard = () => {
     }
 
     try {
-      // Gerar PDF
+      console.log('🎯 Iniciando geração automática de PDF após assinatura...');
+
+      // Gerar PDF automaticamente
       const pdfGenerator = new PDFGenerator();
       const pdf = await pdfGenerator.generateServiceTermPDF(
         selectedBooking,
@@ -258,6 +260,8 @@ const AdminDashboard = () => {
         clientSignature,
         professionalSignature
       );
+
+      console.log('📄 PDF gerado com sucesso!');
 
       // Atualizar status do agendamento
       const updatedBookings = bookings.map(booking => 
@@ -268,7 +272,9 @@ const AdminDashboard = () => {
               completedAt: new Date().toISOString(),
               techniqueData: pendingTechniqueData,
               clientSignature,
-              professionalSignature
+              professionalSignature,
+              pdfGenerated: true,
+              pdfGeneratedAt: new Date().toISOString()
             }
           : booking
       );
@@ -291,10 +297,16 @@ const AdminDashboard = () => {
         clientSignature,
         professionalSignature,
         pdfGenerated: true,
+        pdfGeneratedAt: new Date().toISOString(),
         completedAt: new Date().toISOString()
       };
       completedServices.push(serviceData);
       localStorage.setItem('completedServices', JSON.stringify(completedServices));
+
+      // Download automático do PDF
+      const fileName = `termo-servico-${selectedBooking.clientName.replace(/\s+/g, '-')}-${selectedBooking.date}.pdf`;
+      pdf.save(fileName);
+      console.log(`📥 PDF baixado automaticamente: ${fileName}`);
 
       // Fechar modais e resetar estados
       setShowSignatureModal(false);
@@ -304,21 +316,23 @@ const AdminDashboard = () => {
       setClientSignature(null);
       setProfessionalSignature(null);
 
-      // Baixar PDF automaticamente
-      pdf.save(`termo-servico-${selectedBooking.clientName}-${selectedBooking.date}.pdf`);
-
-      // Mostrar opções de envio
-      setShowModal('sendOptions');
+      // Mostrar modal de confirmação e opções de envio
+      setShowModal('pdfGenerated');
       setFormData({
         serviceData,
-        pdfData: pdf.getDataURL()
+        pdfData: pdf.getDataURL(),
+        fileName
       });
 
-      alert('Serviço finalizado com sucesso! O termo foi gerado e está sendo baixado.');
+      // Recarregar dados para atualizar a interface
+      loadData();
+
+      // Mensagem de sucesso
+      alert('✅ Termo assinado e PDF gerado automaticamente! O arquivo foi baixado e está pronto para envio.');
 
     } catch (error) {
-      console.error('Erro ao finalizar serviço:', error);
-      alert('Erro ao gerar o termo. Tente novamente.');
+      console.error('❌ Erro ao finalizar serviço e gerar PDF:', error);
+      alert('Erro ao gerar o termo automaticamente. Tente novamente.');
     }
   };
 
@@ -1838,28 +1852,55 @@ const AdminDashboard = () => {
                           {booking.status === 'completed' && (
                             <div style={{
                               display: 'flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                              marginTop: '10px',
-                              flexWrap: 'wrap'
+                              flexDirection: 'column',
+                              gap: '8px'
                             }}>
-                              <span style={{
-                                color: '#4CAF50',
-                                fontSize: '0.9rem',
-                                fontWeight: '500'
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '5px'
                               }}>
-                                ✅ Concluído em {new Date(booking.completedAt).toLocaleDateString('pt-BR')}
-                              </span>
+                                <span style={{
+                                  color: '#4CAF50',
+                                  fontSize: '0.85rem',
+                                  fontWeight: '500'
+                                }}>
+                                  ✅ Concluído em {new Date(booking.completedAt).toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                              
+                              {booking.pdfGenerated && (
+                                <div style={{
+                                  background: 'rgba(76, 175, 80, 0.1)',
+                                  border: '1px solid #4CAF50',
+                                  borderRadius: '4px',
+                                  padding: '6px 8px',
+                                  fontSize: '0.75rem',
+                                  color: '#4CAF50',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '5px'
+                                }}>
+                                  📄 PDF gerado automaticamente
+                                  {booking.pdfGeneratedAt && (
+                                    <span style={{ opacity: 0.8 }}>
+                                      em {new Date(booking.pdfGeneratedAt).toLocaleString('pt-BR')}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
                               <button
                                 onClick={() => handleGenerateCompletedTerm(booking)}
                                 style={{
                                   ...getButtonStyle('primary'),
                                   padding: '6px 12px',
                                   fontSize: '0.8rem',
-                                  marginLeft: 'auto'
+                                  width: '100%'
                                 }}
                               >
-                                📄 Gerar Termo
+                                📄 {booking.pdfGenerated ? 'Gerar Novamente' : 'Gerar Termo'}
                               </button>
                             </div>
                           )}
@@ -2040,7 +2081,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Modal de Opções de Envio */}
-      {showModal === 'sendOptions' && (
+      {(showModal === 'sendOptions' || showModal === 'pdfGenerated') && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -2060,8 +2101,8 @@ const AdminDashboard = () => {
             maxWidth: '500px'
           }}>
             <div className="card-header">
-              <span className="card-icon">📤</span>
-              <h3 className="card-title">Enviar Termo para Cliente</h3>
+              <span className="card-icon">✅</span>
+              <h3 className="card-title">PDF Gerado Automaticamente</h3>
               <button
                 onClick={closeModal}
                 style={{
@@ -2078,12 +2119,45 @@ const AdminDashboard = () => {
             </div>
 
             <div style={{ padding: '20px 0' }}>
+              {showModal === 'pdfGenerated' && (
+                <div style={{
+                  background: 'rgba(76, 175, 80, 0.1)',
+                  border: '2px solid #4CAF50',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  marginBottom: '20px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎉</div>
+                  <h4 style={{ 
+                    color: '#4CAF50', 
+                    margin: '0 0 10px 0',
+                    fontSize: '1.2rem'
+                  }}>
+                    Serviço Concluído com Sucesso!
+                  </h4>
+                  <p style={{ 
+                    color: 'white', 
+                    margin: '5px 0',
+                    fontSize: '0.95rem'
+                  }}>
+                    ✅ Assinaturas coletadas<br/>
+                    📄 PDF gerado automaticamente<br/>
+                    📥 Arquivo baixado: {formData.fileName}
+                  </p>
+                </div>
+              )}
+
               <p style={{ 
                 color: 'white', 
                 marginBottom: '20px',
-                lineHeight: '1.4'
+                lineHeight: '1.4',
+                textAlign: 'center'
               }}>
-                O termo foi gerado com sucesso! Escolha como deseja enviar para o cliente:
+                {showModal === 'pdfGenerated' ? 
+                  'Agora você pode enviar o termo para o cliente:' : 
+                  'O termo foi gerado com sucesso! Escolha como deseja enviar para o cliente:'
+                }
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -2132,6 +2206,23 @@ const AdminDashboard = () => {
                   <span style={{ fontSize: '1.2rem' }}>🖨️</span>
                   Imprimir Termo
                 </button>
+
+                <div style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid rgba(255, 215, 0, 0.3)',
+                  borderRadius: '8px',
+                  padding: '15px',
+                  marginTop: '10px'
+                }}>
+                  <p style={{
+                    color: '#FFD700',
+                    fontSize: '0.9rem',
+                    margin: 0,
+                    textAlign: 'center'
+                  }}>
+                    💡 O PDF foi salvo automaticamente e já está disponível no seu dispositivo
+                  </p>
+                </div>
               </div>
 
               <button
