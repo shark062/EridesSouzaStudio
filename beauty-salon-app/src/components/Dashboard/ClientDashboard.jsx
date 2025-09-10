@@ -19,6 +19,7 @@ const ClientDashboard = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [userBookings, setUserBookings] = useState([]);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
   const [userStats, setUserStats] = useState({
     totalVisits: 0,
     loyaltyPoints: 0,
@@ -111,6 +112,17 @@ const ClientDashboard = () => {
     // Carregar mensagens do chat
     const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${user.id}`) || '[]');
     setChatMessages(savedMessages);
+
+    // Listener para detectar quando o menu hambúrguer é aberto/fechado
+    const handleMenuToggle = (event) => {
+      setShowHamburgerMenu(event.detail?.isOpen || false);
+    };
+
+    window.addEventListener('hamburgerMenuToggle', handleMenuToggle);
+
+    return () => {
+      window.removeEventListener('hamburgerMenuToggle', handleMenuToggle);
+    };
   }, [user.id]);
 
   const getUpcomingBookings = () => {
@@ -263,7 +275,12 @@ const ClientDashboard = () => {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container" style={{
+      filter: showHamburgerMenu ? 'blur(3px)' : 'none',
+      opacity: showHamburgerMenu ? '0.3' : '1',
+      transition: 'all 0.3s ease',
+      pointerEvents: showHamburgerMenu ? 'none' : 'auto'
+    }}>
       {isBirthday && (
         <div className="birthday-banner" style={{
           background: 'linear-gradient(135deg, #FFD700, #FFF8DC)',

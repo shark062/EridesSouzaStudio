@@ -11,7 +11,13 @@ const Header = () => {
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null);
 
   const toggleHamburgerMenu = () => {
-    setShowHamburgerMenu(!showHamburgerMenu);
+    const newState = !showHamburgerMenu;
+    setShowHamburgerMenu(newState);
+    
+    // Disparar evento para outros componentes
+    window.dispatchEvent(new CustomEvent('hamburgerMenuToggle', {
+      detail: { isOpen: newState }
+    }));
   };
 
   const openModal = (type) => {
@@ -214,23 +220,21 @@ const Header = () => {
                 top: '100%',
                 right: '0',
                 marginTop: '10px',
-                background: 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(10px)',
-                minWidth: '280px',
-                borderRadius: '12px',
-                boxShadow: '0 8px 25px rgba(255, 215, 0, 0.2)',
-                border: '1px solid rgba(255, 215, 0, 0.4)',
+                background: '#000000',
+                minWidth: '300px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                border: '2px solid #FFD700',
                 zIndex: 1000,
-                padding: '20px',
-                opacity: '0.2'
+                padding: '15px'
               }}>
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px'
                 }}>
-                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700', borderBottom: '1px solid #FFD700', paddingBottom: '10px' }}>
-                    ⚙️ Menu de Opções
+                  <h3 style={{ margin: '0 0 15px 0', color: '#FFD700', textAlign: 'center', fontSize: '1.1rem' }}>
+                    Menu de Opções
                   </h3>
 
                   {/* Upload de Foto */}
@@ -239,17 +243,20 @@ const Header = () => {
                       htmlFor="photoUpload"
                       style={{
                         display: 'block',
-                        padding: '12px',
+                        padding: '10px',
                         background: 'transparent',
-                        border: '1px solid #FFD700',
-                        borderRadius: '8px',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         color: '#FFFFFF',
-                        textAlign: 'center',
-                        transition: 'all 0.3s ease'
+                        textAlign: 'left',
+                        fontSize: '0.9rem',
+                        transition: 'background 0.2s ease'
                       }}
+                      onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                      onMouseLeave={(e) => e.target.style.background = 'transparent'}
                     >
-                      📸 Alterar Foto de Perfil
+                      Alterar Foto de Perfil
                     </label>
                     <input
                       id="photoUpload"
@@ -263,40 +270,48 @@ const Header = () => {
                   <button
                     onClick={() => openModal('editProfile')}
                     style={{
-                      padding: '12px',
+                      width: '100%',
+                      padding: '10px',
                       background: 'transparent',
-                      border: '1px solid #FFD700',
-                      borderRadius: '8px',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       color: '#FFFFFF',
                       textAlign: 'left',
-                      transition: 'all 0.3s ease'
+                      fontSize: '0.9rem',
+                      transition: 'background 0.2s ease'
                     }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
                   >
-                    👤 Editar Meus Dados
+                    Editar Meus Dados
                   </button>
 
                   <button
                     onClick={() => openModal('changePassword')}
                     style={{
-                      padding: '12px',
+                      width: '100%',
+                      padding: '10px',
                       background: 'transparent',
-                      border: '1px solid #FFD700',
-                      borderRadius: '8px',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       color: '#FFFFFF',
                       textAlign: 'left',
-                      transition: 'all 0.3s ease'
+                      fontSize: '0.9rem',
+                      transition: 'background 0.2s ease'
                     }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
                   >
-                    🔐 Alterar Senha
+                    Alterar Senha
                   </button>
 
                   {isAdmin && (
                     <>
-                      <div style={{ borderTop: '1px solid #FFD700', marginTop: '10px', paddingTop: '10px' }}>
-                        <h4 style={{ margin: '0 0 15px 0', color: '#FFD700', fontSize: '1rem', textAlign: 'center' }}>
-                          🎛️ PAINEL ADMINISTRATIVO
+                      <div style={{ borderTop: '1px solid rgba(255, 215, 0, 0.3)', marginTop: '15px', paddingTop: '15px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '0.9rem', textAlign: 'center' }}>
+                          Painel Administrativo
                         </h4>
                       </div>
 
@@ -308,138 +323,115 @@ const Header = () => {
                         }}
                         style={{
                           width: '100%',
-                          padding: '15px',
-                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          padding: '10px',
+                          background: 'transparent',
                           border: 'none',
-                          borderRadius: '12px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#000',
-                          textAlign: 'center',
-                          fontWeight: 'bold',
-                          marginBottom: '10px',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
                           fontSize: '0.9rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
+                          transition: 'background 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
                       >
-                        📊 VISÃO GERAL
+                        Visão Geral
                       </button>
 
-                      {/* Seção Gerenciar Serviços */}
-                      <div style={{
-                        background: 'rgba(76, 175, 80, 0.1)',
-                        border: '2px solid #4CAF50',
-                        borderRadius: '12px',
-                        padding: '15px',
-                        marginBottom: '15px'
-                      }}>
-                        <h5 style={{ 
-                          margin: '0 0 12px 0', 
-                          color: '#4CAF50', 
-                          fontSize: '0.85rem',
-                          textAlign: 'center',
-                          fontWeight: 'bold'
-                        }}>
-                          💅 GERENCIAR SERVIÇOS
-                        </h5>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <button
-                            onClick={() => {
-                              openModal('addService');
-                              setShowHamburgerMenu(false);
-                            }}
-                            style={{
-                              padding: '10px',
-                              background: '#4CAF50',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            ➕ Adicionar Serviço
-                          </button>
-                          <button
-                            onClick={() => {
-                              window.location.hash = 'admin-services';
-                              setShowHamburgerMenu(false);
-                            }}
-                            style={{
-                              padding: '10px',
-                              background: 'transparent',
-                              color: '#4CAF50',
-                              border: '1px solid #4CAF50',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            ✏️ Editar Serviços
-                          </button>
-                        </div>
-                      </div>
+                      {/* Gerenciar Serviços */}
+                      <button
+                        onClick={() => {
+                          openModal('addService');
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Adicionar Serviço
+                      </button>
 
-                      {/* Seção Agendamentos */}
-                      <div style={{
-                        background: 'rgba(33, 150, 243, 0.1)',
-                        border: '2px solid #2196F3',
-                        borderRadius: '12px',
-                        padding: '15px',
-                        marginBottom: '15px'
-                      }}>
-                        <h5 style={{ 
-                          margin: '0 0 12px 0', 
-                          color: '#2196F3', 
-                          fontSize: '0.85rem',
-                          textAlign: 'center',
-                          fontWeight: 'bold'
-                        }}>
-                          📅 AGENDAMENTOS
-                        </h5>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <button
-                            onClick={() => {
-                              openModal('createBooking');
-                              setShowHamburgerMenu(false);
-                            }}
-                            style={{
-                              padding: '10px',
-                              background: '#2196F3',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            📅 Criar Agendamento
-                          </button>
-                          <button
-                            onClick={() => {
-                              window.location.hash = 'admin-bookings';
-                              setShowHamburgerMenu(false);
-                            }}
-                            style={{
-                              padding: '10px',
-                              background: 'transparent',
-                              color: '#2196F3',
-                              border: '1px solid #2196F3',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            📋 Gerenciar Agendamentos
-                          </button>
-                        </div>
-                      </div>
+                      <button
+                        onClick={() => {
+                          window.location.hash = 'admin-services';
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Editar Serviços
+                      </button>
+
+                      {/* Agendamentos */}
+                      <button
+                        onClick={() => {
+                          openModal('createBooking');
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Criar Agendamento
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          window.location.hash = 'admin-bookings';
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Gerenciar Agendamentos
+                      </button>
 
                       {/* Seção Clientes */}
                       <button
@@ -466,7 +458,7 @@ const Header = () => {
                         Clientes
                       </button>
 
-                      {/* Seção Automação */}
+                      {/* Automação */}
                       <button
                         onClick={() => {
                           window.location.hash = 'admin-automation';
@@ -474,89 +466,45 @@ const Header = () => {
                         }}
                         style={{
                           width: '100%',
-                          padding: '15px',
-                          background: 'rgba(255, 87, 34, 0.1)',
-                          border: '2px solid #FF5722',
-                          borderRadius: '12px',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: '#FF5722',
-                          textAlign: 'center',
-                          fontWeight: 'bold',
-                          marginBottom: '15px',
-                          fontSize: '0.85rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px'
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
                         }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
                       >
-                        🤖 AUTOMAÇÃO N8N
+                        Automação N8N
                       </button>
 
-                      {/* Seção Configurações Rápidas */}
-                      <div style={{
-                        background: 'rgba(255, 215, 0, 0.1)',
-                        border: '2px solid #FFD700',
-                        borderRadius: '12px',
-                        padding: '15px',
-                        marginBottom: '15px'
-                      }}>
-                        <h5 style={{ 
-                          margin: '0 0 12px 0', 
-                          color: '#FFD700', 
-                          fontSize: '0.85rem',
-                          textAlign: 'center',
-                          fontWeight: 'bold'
-                        }}>
-                          ⚙️ CONFIGURAÇÕES RÁPIDAS
-                        </h5>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <button
-                            onClick={() => {
-                              openModal('changeAdminCredentials');
-                              setShowHamburgerMenu(false);
-                            }}
-                            style={{
-                              padding: '10px',
-                              background: '#FFD700',
-                              color: '#000',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            🔐 Credenciais Admin
-                          </button>
-                          <div>
-                            <label 
-                              htmlFor="adminPhotoUploadMenu"
-                              style={{
-                                display: 'block',
-                                padding: '10px',
-                                background: 'transparent',
-                                color: '#FFD700',
-                                border: '1px solid #FFD700',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontSize: '0.8rem',
-                                fontWeight: 'bold',
-                                textAlign: 'center'
-                              }}
-                            >
-                              📸 Alterar Foto Admin
-                            </label>
-                            <input
-                              id="adminPhotoUploadMenu"
-                              type="file"
-                              accept="image/*"
-                              onChange={handlePhotoUpload}
-                              style={{ display: 'none' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      {/* Configurações */}
+                      <button
+                        onClick={() => {
+                          openModal('changeAdminCredentials');
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        Credenciais Admin
+                      </button>
 
                       {/* Sincronização */}
                       <button
@@ -567,19 +515,21 @@ const Header = () => {
                         }}
                         style={{
                           width: '100%',
-                          padding: '12px',
-                          background: 'linear-gradient(135deg, #00BCD4, #0097A7)',
+                          padding: '10px',
+                          background: 'transparent',
                           border: 'none',
-                          borderRadius: '8px',
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          color: 'white',
-                          textAlign: 'center',
-                          fontWeight: 'bold',
-                          fontSize: '0.8rem',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease',
                           marginBottom: '10px'
                         }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
                       >
-                        🔄 SINCRONIZAR DADOS
+                        Sincronizar Dados
                       </button>
                     </>
                   )}
@@ -587,17 +537,24 @@ const Header = () => {
                   <button
                     onClick={logout}
                     style={{
-                      padding: '12px',
-                      background: '#FF4444',
+                      width: '100%',
+                      padding: '10px',
+                      background: 'transparent',
                       border: 'none',
-                      borderRadius: '8px',
+                      borderTop: '1px solid rgba(255, 215, 0, 0.3)',
+                      borderRadius: '0',
                       cursor: 'pointer',
-                      color: '#FFFFFF',
+                      color: '#FF4444',
                       textAlign: 'left',
-                      marginTop: '10px'
+                      marginTop: '15px',
+                      paddingTop: '15px',
+                      fontSize: '0.9rem',
+                      transition: 'background 0.2s ease'
                     }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 68, 68, 0.1)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
                   >
-                    🚪 Sair
+                    Sair
                   </button>
                 </div>
               </div>
