@@ -10,7 +10,10 @@ const ServiceCard = ({ service, isBirthday, onBook }) => {
       style={{
         ...getCardStyle(true),
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        background: 'rgba(0, 0, 0, 0.8)',
+        border: '2px solid rgba(255, 215, 0, 0.3)',
+        color: '#FFFFFF'
       }}
     >
       {isBirthday && (
@@ -53,7 +56,7 @@ const ServiceCard = ({ service, isBirthday, onBook }) => {
       </div>
 
       <div className="card-content">
-        <p style={{ marginBottom: '15px', opacity: 0.9, color: '#000000' }}>
+        <p style={{ marginBottom: '15px', opacity: 0.9, color: 'rgba(255, 255, 255, 0.9)' }}>
           {service.description}
         </p>
 
@@ -91,7 +94,7 @@ const ServiceCard = ({ service, isBirthday, onBook }) => {
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            color: 'rgba(0,0,0,0.8)'
+            color: 'rgba(255,255,255,0.8)'
           }}>
             <span>⏱️</span>
             <span>{service.duration}</span>
