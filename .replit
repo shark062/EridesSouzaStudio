@@ -103,6 +103,6 @@ externalPort = 80
 channel = "stable-25_05"
 
 [deployment]
-deploymentTarget = "autoscale"
-run = ["bash", "-c", "cd beauty-salon-app && npm run preview"]
-build = ["bash", "-c", "cd beauty-salon-app && npm run build"]
+deploymentTarget = "vm"
+run = ["bash", "-c", "python app.py & cd beauty-salon-app && npm run preview"]
+build = ["cd beauty-salon-app", "&&", "npm run build"]
