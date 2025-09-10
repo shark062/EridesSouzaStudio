@@ -322,16 +322,16 @@
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .user-section {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }

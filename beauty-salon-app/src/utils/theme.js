@@ -1,4 +1,3 @@
-
 export const theme = {
   colors: {
     primary: {
@@ -51,13 +50,15 @@ export const theme = {
   }
 };
 
-export const getCardStyle = (transparent = false) => ({
-  background: transparent ? 'rgba(248, 246, 240, 0.8)' : 'rgba(248, 246, 240, 0.95)',
-  backdropFilter: 'blur(10px)',
-  border: `1px solid rgba(139, 157, 131, 0.3)`,
-  borderRadius: theme.borderRadius.medium,
-  boxShadow: theme.shadows.soft,
-  color: theme.colors.primary.darkSage
+export const getCardStyle = (isDark = false) => ({
+    background: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(248, 246, 240, 0.9)',
+    backdropFilter: 'blur(10px)',
+    border: `2px solid ${isDark ? 'rgba(255, 215, 0, 0.3)' : 'rgba(139, 157, 131, 0.3)'}`,
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 8px 32px rgba(139, 157, 131, 0.2)',
+    transition: 'all 0.3s ease',
+    color: '#000000',
 });
 
 export const getButtonStyle = (variant = 'primary') => {
@@ -95,7 +96,7 @@ export const getButtonStyle = (variant = 'primary') => {
       border: 'none'
     }
   };
-  
+
   return {
     ...styles[variant],
     borderRadius: theme.borderRadius.medium,

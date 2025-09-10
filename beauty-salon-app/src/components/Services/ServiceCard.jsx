@@ -53,7 +53,7 @@ const ServiceCard = ({ service, isBirthday, onBook }) => {
       </div>
 
       <div className="card-content">
-        <p style={{ marginBottom: '15px', opacity: 0.9 }}>
+        <p style={{ marginBottom: '15px', opacity: 0.9, color: '#000000' }}>
           {service.description}
         </p>
 
@@ -91,7 +91,7 @@ const ServiceCard = ({ service, isBirthday, onBook }) => {
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            color: 'rgba(255,255,255,0.8)'
+            color: 'rgba(0,0,0,0.8)'
           }}>
             <span>⏱️</span>
             <span>{service.duration}</span>
