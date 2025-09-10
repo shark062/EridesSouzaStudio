@@ -534,35 +534,124 @@ const AdminDashboard = () => {
 
   // Função para regenerar o termo de agendamentos concluídos
   const handleGenerateCompletedTerm = async (booking) => {
-    if (!booking) return;
-
-    // Simular a obtenção dos dados necessários para o termo
-    // Em um cenário real, você buscaria esses dados do localStorage ou de um estado mais persistente
-    const completedServices = JSON.parse(localStorage.getItem('completedServices') || '[]');
-    const serviceRecord = completedServices.find(s => s.bookingId === booking.id);
-
-    if (!serviceRecord) {
-      alert('Dados do serviço concluído não encontrados para este agendamento.');
+    if (!booking) {
+      alert('Dados do agendamento não encontrados.');
       return;
     }
 
+    console.log('🔍 Gerando termo para agendamento:', booking);
+
     try {
+      // Buscar dados do serviço concluído
+      const completedServices = JSON.parse(localStorage.getItem('completedServices') || '[]');
+      let serviceRecord = completedServices.find(s => s.bookingId === booking.id);
+
+      // Se não encontrar nos serviços concluídos, verificar se o booking tem os dados necessários
+      if (!serviceRecord && booking.status === 'completed') {
+        serviceRecord = {
+          bookingId: booking.id,
+          clientId: booking.userId,
+          clientName: booking.clientName || clients.find(c => c.id === booking.userId)?.name || 'Cliente',
+          serviceName: booking.serviceName,
+          questionnaireData: booking.questionnaireData || {
+            pregnancy: 'Não informado',
+            nailBiting: 'Não informado',
+            allergies: 'Não informado',
+            cuticleRemoval: 'Não informado',
+            fungalProblems: 'Não informado',
+            medications: 'Não informado',
+            physicalActivity: 'Não informado',
+            poolBeach: 'Não informado',
+            diabetes: 'Não informado',
+            ingrownNails: 'Não informado',
+            nailCondition: []
+          },
+          techniqueData: booking.techniqueData || {
+            technique: 'Técnica padrão',
+            color: 'Não informado',
+            format: 'Não informado',
+            details: 'Sem detalhes adicionais',
+            procedureDate: booking.date,
+            maintenanceDate: 'A combinar',
+            photographicConsent: false,
+            city: 'Cidade'
+          },
+          clientSignature: booking.clientSignature || null,
+          professionalSignature: booking.professionalSignature || null
+        };
+      }
+
+      if (!serviceRecord) {
+        // Criar dados básicos se não existirem
+        serviceRecord = {
+          bookingId: booking.id,
+          clientName: booking.clientName || clients.find(c => c.id === booking.userId)?.name || 'Cliente',
+          serviceName: booking.serviceName || 'Serviço',
+          questionnaireData: {
+            pregnancy: 'Não informado',
+            nailBiting: 'Não informado',
+            allergies: 'Não informado',
+            cuticleRemoval: 'Não informado',
+            fungalProblems: 'Não informado',
+            medications: 'Não informado',
+            physicalActivity: 'Não informado',
+            poolBeach: 'Não informado',
+            diabetes: 'Não informado',
+            ingrownNails: 'Não informado',
+            nailCondition: []
+          },
+          techniqueData: {
+            technique: 'Técnica padrão aplicada',
+            color: 'Cor padrão',
+            format: 'Formato padrão',
+            details: 'Serviço realizado conforme solicitado',
+            procedureDate: booking.date,
+            maintenanceDate: 'A combinar',
+            photographicConsent: false,
+            city: 'Cidade'
+          },
+          clientSignature: null,
+          professionalSignature: null
+        };
+      }
+
+      console.log('📄 Dados para geração do PDF:', serviceRecord);
+
+      // Preparar dados do booking com informações completas
+      const bookingData = {
+        ...booking,
+        clientName: serviceRecord.clientName,
+        serviceName: serviceRecord.serviceName || booking.serviceName,
+        date: booking.date,
+        time: booking.time,
+        price: booking.price || 0
+      };
+
       const pdfGenerator = new PDFGenerator();
       const pdf = await pdfGenerator.generateServiceTermPDF(
-        { ...booking, clientName: booking.clientName || clients.find(c => c.id === booking.userId)?.name || 'Cliente Desconhecido' }, // Garantir que clientName esteja presente
+        bookingData,
         serviceRecord.questionnaireData,
         serviceRecord.techniqueData,
         serviceRecord.clientSignature,
         serviceRecord.professionalSignature
       );
 
-      // Baixar PDF
-      pdf.save(`termo-servico-${booking.clientName || 'cliente'}-${booking.date}.pdf`);
-      alert('Termo gerado e pronto para download!');
+      // Baixar PDF automaticamente
+      const fileName = `termo-servico-${serviceRecord.clientName.replace(/\s+/g, '-')}-${booking.date}.pdf`;
+      pdf.save(fileName);
+
+      alert('✅ Termo gerado com sucesso e está sendo baixado!');
+
+      // Mostrar opções de envio
+      setShowModal('sendOptions');
+      setFormData({
+        serviceData: serviceRecord,
+        pdfData: pdf.getDataURL()
+      });
 
     } catch (error) {
-      console.error('Erro ao regenerar o termo:', error);
-      alert('Erro ao regenerar o termo. Tente novamente.');
+      console.error('❌ Erro ao gerar o termo:', error);
+      alert('Erro ao gerar o termo. Verifique os dados e tente novamente.');
     }
   };
 
