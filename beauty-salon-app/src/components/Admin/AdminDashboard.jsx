@@ -5,6 +5,7 @@ import AutomationPanel from './AutomationPanel';
 import TechniqueForm from './TechniqueForm';
 import SignaturePad from '../Common/SignaturePad';
 import PDFGenerator from '../../utils/pdfGenerator';
+import PDFPreview from './PDFPreview';
 import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
 
@@ -21,6 +22,7 @@ const AdminDashboard = () => {
   const [showTechniqueForm, setShowTechniqueForm] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [pendingTechniqueData, setPendingTechniqueData] = useState(null);
   const [clientSignature, setClientSignature] = useState(null);
   const [professionalSignature, setProfessionalSignature] = useState(null);
@@ -146,7 +148,17 @@ const AdminDashboard = () => {
   const handleTechniqueFormComplete = (techniqueData) => {
     setPendingTechniqueData(techniqueData);
     setShowTechniqueForm(false);
+    setShowPDFPreview(true);
+  };
+
+  const handlePreviewConfirm = () => {
+    setShowPDFPreview(false);
     setShowSignatureModal(true);
+  };
+
+  const handlePreviewCancel = () => {
+    setShowPDFPreview(false);
+    setShowTechniqueForm(true);
   };
 
   const handleSignaturesComplete = async () => {
@@ -205,6 +217,7 @@ const AdminDashboard = () => {
 
       // Fechar modais e resetar estados
       setShowSignatureModal(false);
+      setShowPDFPreview(false);
       setSelectedBooking(null);
       setPendingTechniqueData(null);
       setClientSignature(null);
@@ -456,40 +469,137 @@ const AdminDashboard = () => {
   return (
     <div className="dashboard-container">
       <div style={{ 
-        background: 'linear-gradient(135deg, #FFFFFF, #F5F5F5)',
+        background: 'linear-gradient(135deg, #FFD700, #FFF8DC, #FFFFFF)',
         color: '#000',
-        padding: '25px',
-        borderRadius: '16px',
+        padding: '30px',
+        borderRadius: '20px',
         textAlign: 'center',
         marginBottom: '30px',
-        position: 'relative'
+        position: 'relative',
+        boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)',
+        border: '2px solid rgba(255, 215, 0, 0.5)'
       }}>
+        <div style={{
+          position: 'absolute',
+          top: '-10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+          color: '#000',
+          padding: '8px 20px',
+          borderRadius: '20px',
+          fontSize: '0.9rem',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4)'
+        }}>
+          ✨ PAINEL ADMINISTRATIVO ✨
+        </div>
+
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '15px',
-          marginBottom: '10px'
+          gap: '20px',
+          marginBottom: '15px',
+          marginTop: '10px'
         }}>
-          {profilePhoto && (
-            <img 
-              src={profilePhoto} 
-              alt="Perfil Admin" 
-              style={{
-                width: '60px',
-                height: '60px',
+          <div style={{
+            position: 'relative',
+            display: 'inline-block'
+          }}>
+            {profilePhoto ? (
+              <img 
+                src={profilePhoto} 
+                alt="Perfil Admin" 
+                style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  border: '4px solid #FFD700',
+                  boxShadow: '0 6px 20px rgba(255, 215, 0, 0.4)'
+                }}
+              />
+            ) : (
+              <div style={{
+                width: '80px',
+                height: '80px',
                 borderRadius: '50%',
-                border: '3px solid #FFD700'
-              }}
-            />
-          )}
-          <div>
-            <h1 style={{ margin: 0, fontSize: '2rem' }}>
-              👑 Painel Administrativo - {user.name}
+                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                border: '4px solid #FFF',
+                boxShadow: '0 6px 20px rgba(255, 215, 0, 0.4)'
+              }}>
+                👑
+              </div>
+            )}
+            <div style={{
+              position: 'absolute',
+              bottom: '-5px',
+              right: '-5px',
+              background: '#4CAF50',
+              color: 'white',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.8rem',
+              border: '2px solid white'
+            }}>
+              ✓
+            </div>
+          </div>
+          
+          <div style={{ textAlign: 'left' }}>
+            <h1 style={{ 
+              margin: 0, 
+              fontSize: '2.2rem',
+              background: 'linear-gradient(135deg, #B8860B, #8B4513)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+              textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              {user.name}
             </h1>
-            <p style={{ margin: '10px 0 0 0', fontSize: '1.1rem' }}>
-              Gestão completa do Salon Beleza Dourada
+            <p style={{ 
+              margin: '5px 0 0 0', 
+              fontSize: '1.1rem',
+              color: '#8B4513',
+              fontStyle: 'italic'
+            }}>
+              💅 Salon Beleza Dourada - Administrador
             </p>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginTop: '8px'
+            }}>
+              <span style={{
+                background: 'rgba(76, 175, 80, 0.2)',
+                color: '#2E7D32',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '0.8rem',
+                fontWeight: 'bold'
+              }}>
+                🟢 Online
+              </span>
+              <span style={{
+                background: 'rgba(255, 193, 7, 0.2)',
+                color: '#F57C00',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '0.8rem',
+                fontWeight: 'bold'
+              }}>
+                ⭐ Premium
+              </span>
+            </div>
           </div>
         </div>
 
@@ -839,21 +949,58 @@ const AdminDashboard = () => {
                     color: '#FFFFFF'
                   }}
                 />
-                <input
-                  type="text"
-                  placeholder="Emoji do serviço (ex: 💅)"
-                  value={formData.image || ''}
-                  onChange={(e) => setFormData({...formData, image: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    marginBottom: '20px',
-                    border: '1px solid #FFD700',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    color: '#FFFFFF'
-                  }}
-                />
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  <input
+                    type="text"
+                    placeholder="💅"
+                    value={formData.image || ''}
+                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    style={{
+                      width: '80px',
+                      padding: '12px',
+                      border: '1px solid #FFD700',
+                      borderRadius: '8px',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      color: '#FFFFFF',
+                      textAlign: 'center',
+                      fontSize: '1.5rem'
+                    }}
+                    maxLength="2"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <small style={{ 
+                      display: 'block', 
+                      color: '#FFD700', 
+                      marginBottom: '5px',
+                      fontSize: '0.8rem'
+                    }}>
+                      Emoji do Serviço
+                    </small>
+                    <div style={{
+                      display: 'flex',
+                      gap: '5px',
+                      flexWrap: 'wrap'
+                    }}>
+                      {['💅', '🦶', '✨', '🎨', '💎', '🌟', '💆', '🌺'].map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setFormData({...formData, image: emoji})}
+                          style={{
+                            background: formData.image === emoji ? '#FFD700' : 'rgba(255, 215, 0, 0.2)',
+                            border: '1px solid #FFD700',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem'
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
@@ -944,21 +1091,58 @@ const AdminDashboard = () => {
                     color: '#FFFFFF'
                   }}
                 />
-                <input
-                  type="text"
-                  placeholder="Emoji do serviço"
-                  value={formData.image || selectedService?.image || ''}
-                  onChange={(e) => setFormData({...formData, image: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    marginBottom: '20px',
-                    border: '1px solid #FFD700',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    color: '#FFFFFF'
-                  }}
-                />
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  <input
+                    type="text"
+                    placeholder="💅"
+                    value={formData.image || selectedService?.image || ''}
+                    onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    style={{
+                      width: '80px',
+                      padding: '12px',
+                      border: '1px solid #FFD700',
+                      borderRadius: '8px',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      color: '#FFFFFF',
+                      textAlign: 'center',
+                      fontSize: '1.5rem'
+                    }}
+                    maxLength="2"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <small style={{ 
+                      display: 'block', 
+                      color: '#FFD700', 
+                      marginBottom: '5px',
+                      fontSize: '0.8rem'
+                    }}>
+                      Emoji do Serviço
+                    </small>
+                    <div style={{
+                      display: 'flex',
+                      gap: '5px',
+                      flexWrap: 'wrap'
+                    }}>
+                      {['💅', '🦶', '✨', '🎨', '💎', '🌟', '💆', '🌺'].map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setFormData({...formData, image: emoji})}
+                          style={{
+                            background: (formData.image || selectedService?.image) === emoji ? '#FFD700' : 'rgba(255, 215, 0, 0.2)',
+                            border: '1px solid #FFD700',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem'
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{
                     padding: '12px 20px',
@@ -1621,6 +1805,17 @@ const AdminDashboard = () => {
           booking={selectedBooking}
           onComplete={handleTechniqueFormComplete}
           onCancel={() => setShowTechniqueForm(false)}
+        />
+      )}
+
+      {/* Modal de Preview do PDF */}
+      {showPDFPreview && selectedBooking && pendingTechniqueData && (
+        <PDFPreview
+          booking={selectedBooking}
+          questionnaireData={selectedBooking.questionnaireData}
+          techniqueData={pendingTechniqueData}
+          onConfirm={handlePreviewConfirm}
+          onCancel={handlePreviewCancel}
         />
       )}
 
