@@ -670,41 +670,24 @@ const AdminDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      <div style={{ 
-        background: 'linear-gradient(135deg, #FFD700, #FFF8DC, #FFFFFF)',
-        color: '#000',
-        padding: '30px',
-        borderRadius: '20px',
-        textAlign: 'center',
+      {/* Status de Sincronização - Simplificado */}
+      <div style={{
+        background: 'rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 215, 0, 0.3)',
+        borderRadius: '16px',
+        padding: '20px',
         marginBottom: '30px',
-        position: 'relative',
-        boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)',
-        border: '2px solid rgba(255, 215, 0, 0.5)'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '15px'
       }}>
         <div style={{
-          position: 'absolute',
-          top: '-10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-          color: '#000',
-          padding: '8px 20px',
-          borderRadius: '20px',
-          fontSize: '0.9rem',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4)'
-        }}>
-          ✨ PAINEL ADMINISTRATIVO ✨
-        </div>
-
-        {/* Status de Sincronização */}
-        <div style={{
           display: 'flex',
-          justifyContent: 'center',
           alignItems: 'center',
-          gap: '15px',
-          marginBottom: '20px',
-          marginTop: '10px'
+          gap: '15px'
         }}>
           <div style={{
             background: syncStatus === 'connected' ? 'rgba(76, 175, 80, 0.2)' : 
@@ -748,213 +731,30 @@ const AdminDashboard = () => {
               Última sync: {lastSyncTime.toLocaleTimeString()}
             </div>
           )}
-
-          <button
-            onClick={() => {
-              console.log('🔄 Forçando sincronização manual...');
-              syncWithServer();
-              window.dispatchEvent(new Event('forceSync'));
-            }}
-            style={{
-              background: '#2196F3',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '8px 16px',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px'
-            }}
-          >
-            🔄 Sincronizar
-          </button>
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '20px',
-          marginBottom: '15px'
-        }}>
-          <div style={{
-            position: 'relative',
-            display: 'inline-block'
-          }}>
-            {profilePhoto ? (
-              <img 
-                src={profilePhoto} 
-                alt="Perfil Admin" 
-                style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  border: '4px solid #FFD700',
-                  boxShadow: '0 6px 20px rgba(255, 215, 0, 0.4)'
-                }}
-              />
-            ) : (
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2rem',
-                border: '4px solid #FFF',
-                boxShadow: '0 6px 20px rgba(255, 215, 0, 0.4)'
-              }}>
-                👑
-              </div>
-            )}
-            <div style={{
-              position: 'absolute',
-              top: '-10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-              color: '#000',
-              padding: '8px 20px',
-              borderRadius: '20px',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4)'
-            }}>
-              ✨ PAINEL ADMINISTRATIVO ✨
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'left' }}>
-            <h1 style={{ 
-              margin: 0, 
-              fontSize: '2.2rem',
-              background: 'linear-gradient(135deg, #B8860B, #8B4513)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              fontWeight: 'bold',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
-            }}>
-              {user.name}
-            </h1>
-            <p style={{ 
-              margin: '5px 0 0 0', 
-              fontSize: '1.1rem',
-              color: '#8B4513',
-              fontStyle: 'italic'
-            }}>
-              💅 Salon Beleza Dourada - Administrador
-            </p>
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              marginTop: '8px'
-            }}>
-              <span style={{
-                background: 'rgba(76, 175, 80, 0.2)',
-                color: '#2E7D32',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
-              }}>
-                🟢 Online
-              </span>
-              <span style={{
-                background: 'rgba(255, 193, 7, 0.2)',
-                color: '#F57C00',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
-              }}>
-                ⭐ Premium
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Menu de Ações Rápidas */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '15px',
-          marginTop: '25px'
-        }}>
-          <button
-            onClick={() => openModal('changeAdminCredentials')}
-            style={{
-              padding: '15px',
-              background: '#FFD700',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              color: '#000'
-            }}
-          >
-            🔐 Alterar Credenciais Admin
-          </button>
-
-          <button
-            onClick={() => openModal('addService')}
-            style={{
-              padding: '15px',
-              background: '#4CAF50',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              color: 'white'
-            }}
-          >
-            ➕ Adicionar Serviço
-          </button>
-
-          <button
-            onClick={() => openModal('createBooking')}
-            style={{
-              padding: '15px',
-              background: '#2196F3',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              color: 'white'
-            }}
-          >
-            📅 Criar Agendamento
-          </button>
-
-          <div>
-            <label 
-              htmlFor="adminPhotoUpload"
-              style={{
-                display: 'block',
-                padding: '15px',
-                background: '#FF9800',
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                color: 'white'
-              }}
-            >
-              📸 Alterar Foto Admin
-            </label>
-            <input
-              id="adminPhotoUpload"
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              style={{ display: 'none' }}
-            />
-          </div>
-        </div>
+        <button
+          onClick={() => {
+            console.log('🔄 Forçando sincronização manual...');
+            syncWithServer();
+            window.dispatchEvent(new Event('forceSync'));
+          }}
+          style={{
+            background: '#2196F3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '8px 16px',
+            cursor: 'pointer',
+            fontSize: '0.8rem',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+        >
+          🔄 Sincronizar
+        </button>
       </div>
 
       {/* Modais */}

@@ -85,9 +85,56 @@ const Header = () => {
         }
         alert('Perfil atualizado com sucesso!');
         break;
+
+      case 'changeAdminCredentials':
+        // Alterar credenciais do admin
+        const adminUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+        const updatedAdmins = adminUsers.map(u => 
+          u.role === 'admin' ? 
+          { ...u, name: formData.name || u.name, username: formData.username || u.username, password: formData.password || u.password } : 
+          u
+        );
+        localStorage.setItem('registeredUsers', JSON.stringify(updatedAdmins));
+        alert('Credenciais administrativas atualizadas com sucesso!');
+        break;
+
+      case 'addService':
+        // Adicionar novo serviço
+        const services = JSON.parse(localStorage.getItem('services') || '[]');
+        const newService = {
+          id: Date.now(),
+          name: formData.serviceName,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          duration: formData.duration,
+          image: formData.emoji || '💅'
+        };
+        const updatedServices = [...services, newService];
+        localStorage.setItem('services', JSON.stringify(updatedServices));
+        alert('Serviço adicionado com sucesso!');
+        break;
+
+      case 'createBooking':
+        // Criar novo agendamento (implementação básica)
+        const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
+        const newBooking = {
+          id: Date.now().toString(),
+          userId: formData.clientId,
+          serviceId: formData.serviceId,
+          date: formData.date,
+          time: formData.time,
+          status: 'confirmed',
+          createdAt: new Date().toISOString()
+        };
+        const updatedBookings = [...bookings, newBooking];
+        localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
+        alert('Agendamento criado com sucesso!');
+        break;
     }
 
     closeModal();
+    // Forçar recarregamento dos dados
+    window.dispatchEvent(new Event('dataSync'));
   };
 
   return (
@@ -115,6 +162,101 @@ const Header = () => {
           </div>
           {isAdmin && <span className="admin-badge">ADMIN</span>}
         </div>
+
+        {/* Navegação Administrativa */}
+        {isAdmin && (
+          <div className="admin-navigation" style={{
+            display: 'flex',
+            gap: '15px',
+            alignItems: 'center',
+            marginRight: '20px'
+          }}>
+            <button
+              onClick={() => openModal('changeAdminCredentials')}
+              style={{
+                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                color: '#000',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              🔐 Credenciais
+            </button>
+            
+            <button
+              onClick={() => openModal('addService')}
+              style={{
+                background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              ➕ Serviço
+            </button>
+            
+            <button
+              onClick={() => openModal('createBooking')}
+              style={{
+                background: 'linear-gradient(135deg, #2196F3, #1976D2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              📅 Agendamento
+            </button>
+            
+            <div style={{ position: 'relative' }}>
+              <label 
+                htmlFor="adminPhotoUploadHeader"
+                style={{
+                  background: 'linear-gradient(135deg, #FF9800, #F57C00)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                📸 Foto
+              </label>
+              <input
+                id="adminPhotoUploadHeader"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="user-section">
           <div className="user-info">
@@ -420,6 +562,287 @@ const Header = () => {
                     cursor: 'pointer'
                   }}>
                     Salvar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Modais Administrativos */}
+            {showModal === 'changeAdminCredentials' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>🔐 Alterar Credenciais Admin</h2>
+                <input
+                  type="text"
+                  placeholder="Novo nome do administrador"
+                  value={formData.name || ''}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Novo usuário"
+                  value={formData.username || ''}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="password"
+                  placeholder="Nova senha"
+                  value={formData.password || ''}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#FFD700',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}>
+                    Salvar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'addService' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>➕ Adicionar Novo Serviço</h2>
+                <input
+                  type="text"
+                  placeholder="Nome do serviço"
+                  value={formData.serviceName || ''}
+                  onChange={(e) => setFormData({...formData, serviceName: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <textarea
+                  placeholder="Descrição do serviço"
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Preço (R$)"
+                  value={formData.price || ''}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="Duração (ex: 60 min)"
+                  value={formData.duration || ''}
+                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                  <input
+                    type="text"
+                    placeholder="💅"
+                    value={formData.emoji || ''}
+                    onChange={(e) => setFormData({...formData, emoji: e.target.value})}
+                    style={{
+                      width: '80px',
+                      padding: '12px',
+                      border: '1px solid #000',
+                      borderRadius: '8px',
+                      textAlign: 'center',
+                      fontSize: '1.5rem'
+                    }}
+                    maxLength="2"
+                  />
+                  <div style={{ flex: 1 }}>
+                    <small style={{ display: 'block', marginBottom: '5px', fontSize: '0.8rem' }}>
+                      Emoji do Serviço
+                    </small>
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                      {['💅', '🦶', '✨', '🎨', '💎', '🌟', '💆', '🌺'].map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setFormData({...formData, emoji})}
+                          style={{
+                            background: formData.emoji === emoji ? '#000' : 'transparent',
+                            color: formData.emoji === emoji ? '#FFF' : '#000',
+                            border: '1px solid #000',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem'
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}>
+                    Adicionar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'createBooking' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>📅 Criar Novo Agendamento</h2>
+                <select
+                  value={formData.clientId || ''}
+                  onChange={(e) => setFormData({...formData, clientId: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar cliente</option>
+                  {/* Aqui seria necessário ter acesso aos clientes - implementação básica */}
+                </select>
+                <select
+                  value={formData.serviceId || ''}
+                  onChange={(e) => setFormData({...formData, serviceId: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                >
+                  <option value="">Selecionar serviço</option>
+                  {/* Aqui seria necessário ter acesso aos serviços - implementação básica */}
+                </select>
+                <input
+                  type="date"
+                  value={formData.date || ''}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="time"
+                  value={formData.time || ''}
+                  onChange={(e) => setFormData({...formData, time: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#2196F3',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}>
+                    Criar
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
