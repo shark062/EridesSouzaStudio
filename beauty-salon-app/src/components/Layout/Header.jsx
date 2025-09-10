@@ -163,100 +163,7 @@ const Header = () => {
           {isAdmin && <span className="admin-badge">ADMIN</span>}
         </div>
 
-        {/* Navegação Administrativa */}
-        {isAdmin && (
-          <div className="admin-navigation" style={{
-            display: 'flex',
-            gap: '15px',
-            alignItems: 'center',
-            marginRight: '20px'
-          }}>
-            <button
-              onClick={() => openModal('changeAdminCredentials')}
-              style={{
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                color: '#000',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
-            >
-              🔐 Credenciais
-            </button>
-            
-            <button
-              onClick={() => openModal('addService')}
-              style={{
-                background: 'linear-gradient(135deg, #4CAF50, #45a049)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
-            >
-              ➕ Serviço
-            </button>
-            
-            <button
-              onClick={() => openModal('createBooking')}
-              style={{
-                background: 'linear-gradient(135deg, #2196F3, #1976D2)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
-            >
-              📅 Agendamento
-            </button>
-            
-            <div style={{ position: 'relative' }}>
-              <label 
-                htmlFor="adminPhotoUploadHeader"
-                style={{
-                  background: 'linear-gradient(135deg, #FF9800, #F57C00)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}
-              >
-                📸 Foto
-              </label>
-              <input
-                id="adminPhotoUploadHeader"
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                style={{ display: 'none' }}
-              />
-            </div>
-          </div>
-        )}
+        
 
         <div className="user-section">
           <div className="user-info">
@@ -387,25 +294,293 @@ const Header = () => {
                   {isAdmin && (
                     <>
                       <div style={{ borderTop: '1px solid #FFD700', marginTop: '10px', paddingTop: '10px' }}>
-                        <h4 style={{ margin: '0 0 10px 0', color: '#FFD700', fontSize: '0.9rem' }}>
-                          🛠️ Funções Administrativas
+                        <h4 style={{ margin: '0 0 15px 0', color: '#FFD700', fontSize: '1rem', textAlign: 'center' }}>
+                          🎛️ PAINEL ADMINISTRATIVO
                         </h4>
                       </div>
 
+                      {/* Seção Visão Geral */}
                       <button
-                        onClick={() => window.location.href = '#admin-panel'}
+                        onClick={() => {
+                          window.location.hash = 'admin-overview';
+                          setShowHamburgerMenu(false);
+                        }}
                         style={{
+                          width: '100%',
+                          padding: '15px',
+                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          color: '#000',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                          marginBottom: '10px',
+                          fontSize: '0.9rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        📊 VISÃO GERAL
+                      </button>
+
+                      {/* Seção Gerenciar Serviços */}
+                      <div style={{
+                        background: 'rgba(76, 175, 80, 0.1)',
+                        border: '2px solid #4CAF50',
+                        borderRadius: '12px',
+                        padding: '15px',
+                        marginBottom: '15px'
+                      }}>
+                        <h5 style={{ 
+                          margin: '0 0 12px 0', 
+                          color: '#4CAF50', 
+                          fontSize: '0.85rem',
+                          textAlign: 'center',
+                          fontWeight: 'bold'
+                        }}>
+                          💅 GERENCIAR SERVIÇOS
+                        </h5>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            onClick={() => {
+                              openModal('addService');
+                              setShowHamburgerMenu(false);
+                            }}
+                            style={{
+                              padding: '10px',
+                              background: '#4CAF50',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            ➕ Adicionar Serviço
+                          </button>
+                          <button
+                            onClick={() => {
+                              window.location.hash = 'admin-services';
+                              setShowHamburgerMenu(false);
+                            }}
+                            style={{
+                              padding: '10px',
+                              background: 'transparent',
+                              color: '#4CAF50',
+                              border: '1px solid #4CAF50',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            ✏️ Editar Serviços
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Seção Agendamentos */}
+                      <div style={{
+                        background: 'rgba(33, 150, 243, 0.1)',
+                        border: '2px solid #2196F3',
+                        borderRadius: '12px',
+                        padding: '15px',
+                        marginBottom: '15px'
+                      }}>
+                        <h5 style={{ 
+                          margin: '0 0 12px 0', 
+                          color: '#2196F3', 
+                          fontSize: '0.85rem',
+                          textAlign: 'center',
+                          fontWeight: 'bold'
+                        }}>
+                          📅 AGENDAMENTOS
+                        </h5>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            onClick={() => {
+                              openModal('createBooking');
+                              setShowHamburgerMenu(false);
+                            }}
+                            style={{
+                              padding: '10px',
+                              background: '#2196F3',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            📅 Criar Agendamento
+                          </button>
+                          <button
+                            onClick={() => {
+                              window.location.hash = 'admin-bookings';
+                              setShowHamburgerMenu(false);
+                            }}
+                            style={{
+                              padding: '10px',
+                              background: 'transparent',
+                              color: '#2196F3',
+                              border: '1px solid #2196F3',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            📋 Gerenciar Agendamentos
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Seção Clientes */}
+                      <button
+                        onClick={() => {
+                          window.location.hash = 'admin-clients';
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '15px',
+                          background: 'rgba(156, 39, 176, 0.1)',
+                          border: '2px solid #9C27B0',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          color: '#9C27B0',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                          marginBottom: '15px',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        👥 CLIENTES
+                      </button>
+
+                      {/* Seção Automação */}
+                      <button
+                        onClick={() => {
+                          window.location.hash = 'admin-automation';
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '15px',
+                          background: 'rgba(255, 87, 34, 0.1)',
+                          border: '2px solid #FF5722',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          color: '#FF5722',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                          marginBottom: '15px',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        🤖 AUTOMAÇÃO N8N
+                      </button>
+
+                      {/* Seção Configurações Rápidas */}
+                      <div style={{
+                        background: 'rgba(255, 215, 0, 0.1)',
+                        border: '2px solid #FFD700',
+                        borderRadius: '12px',
+                        padding: '15px',
+                        marginBottom: '15px'
+                      }}>
+                        <h5 style={{ 
+                          margin: '0 0 12px 0', 
+                          color: '#FFD700', 
+                          fontSize: '0.85rem',
+                          textAlign: 'center',
+                          fontWeight: 'bold'
+                        }}>
+                          ⚙️ CONFIGURAÇÕES RÁPIDAS
+                        </h5>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button
+                            onClick={() => {
+                              openModal('changeAdminCredentials');
+                              setShowHamburgerMenu(false);
+                            }}
+                            style={{
+                              padding: '10px',
+                              background: '#FFD700',
+                              color: '#000',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            🔐 Credenciais Admin
+                          </button>
+                          <div>
+                            <label 
+                              htmlFor="adminPhotoUploadMenu"
+                              style={{
+                                display: 'block',
+                                padding: '10px',
+                                background: 'transparent',
+                                color: '#FFD700',
+                                border: '1px solid #FFD700',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                              }}
+                            >
+                              📸 Alterar Foto Admin
+                            </label>
+                            <input
+                              id="adminPhotoUploadMenu"
+                              type="file"
+                              accept="image/*"
+                              onChange={handlePhotoUpload}
+                              style={{ display: 'none' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sincronização */}
+                      <button
+                        onClick={() => {
+                          console.log('🔄 Sincronização forçada do menu admin...');
+                          window.dispatchEvent(new Event('dataSync'));
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
                           padding: '12px',
-                          background: '#FFD700',
+                          background: 'linear-gradient(135deg, #00BCD4, #0097A7)',
                           border: 'none',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          color: '#000',
-                          textAlign: 'left',
-                          fontWeight: 'bold'
+                          color: 'white',
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                          fontSize: '0.8rem',
+                          marginBottom: '10px'
                         }}
                       >
-                        🎛️ Painel Administrativo Completo
+                        🔄 SINCRONIZAR DADOS
                       </button>
                     </>
                   )}

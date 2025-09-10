@@ -40,6 +40,19 @@ const AdminDashboard = () => {
     loadData();
     loadServices();
 
+    // Controlar seção ativa baseado no hash da URL
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#admin-', '');
+      if (['overview', 'services', 'bookings', 'clients', 'automation'].includes(hash)) {
+        setActiveTab(hash);
+      } else {
+        setActiveTab('overview');
+      }
+    };
+
+    // Definir seção inicial baseada no hash atual
+    handleHashChange();
+
     // Listener para sincronização automática
     const handleDataSync = (event) => {
       console.log('🔄 Dados sincronizados - recarregando dashboard admin');
@@ -76,11 +89,13 @@ const AdminDashboard = () => {
 
     window.addEventListener('dataSync', handleDataSync);
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('hashchange', handleHashChange);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('dataSync', handleDataSync);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('hashchange', handleHashChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(dataRefreshInterval);
     };
@@ -1578,25 +1593,25 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Navegação por abas */}
-      <div className="tab-navigation" style={{ marginBottom: '30px' }}>
-        {['overview', 'services', 'bookings', 'clients', 'automation'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              ...getButtonStyle(activeTab === tab ? 'primary' : 'secondary'),
-              marginRight: '10px',
-              fontSize: '0.9rem'
-            }}
-          >
-            {tab === 'overview' && '📊 Visão Geral'}
-            {tab === 'services' && '💅 Gerenciar Serviços'}
-            {tab === 'bookings' && '📅 Agendamentos'}
-            {tab === 'clients' && '👥 Clientes'}
-            {tab === 'automation' && '🤖 Automação N8n'}
-          </button>
-        ))}
+      {/* Indicador da seção ativa */}
+      <div style={{
+        background: 'rgba(255, 215, 0, 0.1)',
+        border: '1px solid rgba(255, 215, 0, 0.3)',
+        borderRadius: '12px',
+        padding: '15px',
+        marginBottom: '30px',
+        textAlign: 'center'
+      }}>
+        <h2 style={{ margin: 0, color: '#FFD700', fontSize: '1.2rem' }}>
+          {activeTab === 'overview' && '📊 Visão Geral do Sistema'}
+          {activeTab === 'services' && '💅 Gestão de Serviços'}
+          {activeTab === 'bookings' && '📅 Gestão de Agendamentos'}
+          {activeTab === 'clients' && '👥 Gestão de Clientes'}
+          {activeTab === 'automation' && '🤖 Automação N8n'}
+        </h2>
+        <p style={{ margin: '5px 0 0 0', color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
+          Use o menu hambúrguer do cabeçalho para navegar entre as seções
+        </p>
       </div>
 
       {/* Conteúdo das abas */}
