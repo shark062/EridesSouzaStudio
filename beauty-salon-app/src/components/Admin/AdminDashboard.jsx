@@ -46,36 +46,75 @@ const AdminDashboard = () => {
       loadServices();
     };
 
-    window.addEventListener('dataSync', handleDataSync);
-    
     // Listener para mudanças no localStorage
     const handleStorageChange = (e) => {
-      if (e.key === 'userBookings' || e.key === 'registeredUsers' || e.key === 'services') {
-        console.log('📱 Dados atualizados em outro dispositivo');
+      const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services'];
+      if (watchedKeys.includes(e.key)) {
+        console.log('📱 Dados atualizados:', e.key);
+        setTimeout(() => {
+          loadData();
+          loadServices();
+        }, 100); // Pequeno delay para garantir que os dados foram salvos
+      }
+    };
+
+    // Listener para quando a aba fica ativa
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('👁️ Aba ficou ativa - recarregando dados');
         loadData();
         loadServices();
       }
     };
 
+    // Recarregar dados a cada 10 segundos
+    const dataRefreshInterval = setInterval(() => {
+      loadData();
+    }, 10000);
+
+    window.addEventListener('dataSync', handleDataSync);
     window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('dataSync', handleDataSync);
       window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(dataRefreshInterval);
     };
   }, []);
 
   const loadData = () => {
-    // Carregar agendamentos
-    const allBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-    setBookings(allBookings);
+    try {
+      // Carregar agendamentos de múltiplas fontes para garantir compatibilidade
+      let allBookings = [];
+      
+      // Tentar carregar de diferentes chaves do localStorage
+      const sources = ['userBookings', 'bookings', 'allBookings'];
+      for (const source of sources) {
+        const sourceData = JSON.parse(localStorage.getItem(source) || '[]');
+        if (sourceData.length > 0) {
+          allBookings = sourceData;
+          break;
+        }
+      }
 
-    // Carregar clientes
-    const allClients = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    setClients(allClients.filter(user => user.role !== 'admin'));
+      console.log('📋 Agendamentos carregados:', allBookings.length);
+      setBookings(allBookings);
 
-    // Calcular estatísticas
-    calculateStats(allBookings, allClients);
+      // Carregar clientes
+      const allClients = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const clientsOnly = allClients.filter(user => user.role !== 'admin');
+      console.log('👥 Clientes carregados:', clientsOnly.length);
+      setClients(clientsOnly);
+
+      // Calcular estatísticas
+      calculateStats(allBookings, clientsOnly);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      setBookings([]);
+      setClients([]);
+    }
   };
 
   const loadServices = () => {
@@ -1682,97 +1721,171 @@ const AdminDashboard = () => {
             >
               ✏️ Editar Agendamento
             </button>
+            <button
+              onClick={() => {
+                console.log('🔄 Forçando recarga de dados...');
+                loadData();
+                loadServices();
+              }}
+              style={{
+                padding: '10px 20px',
+                background: '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Recarregar Dados
+            </button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              background: 'rgba(0, 0, 0, 0.8)',
+          {/* Debug Info */}
+          <div style={{
+            background: 'rgba(33, 150, 243, 0.1)',
+            border: '1px solid rgba(33, 150, 243, 0.3)',
+            borderRadius: '8px',
+            padding: '15px',
+            marginBottom: '20px',
+            fontSize: '0.9rem'
+          }}>
+            <p style={{ color: '#2196F3', margin: '5px 0' }}>
+              📊 <strong>Debug Info:</strong> {bookings.length} agendamentos encontrados | {clients.length} clientes
+            </p>
+            <p style={{ color: '#2196F3', margin: '5px 0' }}>
+              💾 <strong>Fontes de dados:</strong> localStorage (userBookings, bookings, registeredUsers)
+            </p>
+          </div>
+
+          {bookings.length === 0 ? (
+            <div style={{
+              background: 'rgba(255, 193, 7, 0.1)',
+              border: '1px solid rgba(255, 193, 7, 0.3)',
               borderRadius: '12px',
-              overflow: 'hidden',
-              color: 'white'
+              padding: '40px',
+              textAlign: 'center',
+              color: '#FFC107'
             }}>
-              <thead style={{ background: 'rgba(255, 215, 0, 0.2)' }}>
-                <tr>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Cliente</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Serviço</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Data/Hora</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Valor</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Tipo</th>
-                  <th style={{ padding: '15px', textAlign: 'left' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map(booking => {
-                  const client = clients.find(c => c.id === booking.userId);
-                  return (
-                    <tr key={booking.id} style={{ borderBottom: '1px solid rgba(255, 215, 0, 0.1)' }}>
-                      <td style={{ padding: '15px' }}>{client?.name || 'Cliente'}</td>
-                      <td style={{ padding: '15px' }}>{booking.serviceName}</td>
-                      <td style={{ padding: '15px' }}>
-                        {formatDate(booking.date)}<br />
-                        <small>{booking.time}</small>
-                      </td>
-                      <td style={{ padding: '15px' }}>{formatCurrency(booking.price)}</td>
-                      <td style={{ padding: '15px' }}>{getStatusBadge(booking.status)}</td>
-                      <td style={{ padding: '15px' }}>
-                        {booking.afterHours ? (
-                          <span style={{ 
-                            background: '#FF9800', 
-                            color: 'white', 
-                            padding: '4px 8px', 
-                            borderRadius: '12px', 
-                            fontSize: '0.8rem' 
-                          }}>
-                            Pós-expediente
-                          </span>
-                        ) : (
-                          <span style={{ 
-                            background: '#4CAF50', 
-                            color: 'white', 
-                            padding: '4px 8px', 
-                            borderRadius: '12px', 
-                            fontSize: '0.8rem' 
-                          }}>
-                            Comercial
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: '15px' }}>
-                        {booking.status === 'confirmed' && (
-                          <button
-                            onClick={() => handleFinishService(booking)}
-                            style={{
-                              background: '#FFD700',
-                              color: '#000',
-                              border: 'none',
-                              padding: '8px 16px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
+              <h3 style={{ margin: '0 0 15px 0' }}>📅 Nenhum agendamento encontrado</h3>
+              <p style={{ margin: '0 0 20px 0', opacity: 0.8 }}>
+                Os agendamentos aparecerão aqui quando forem criados pelos clientes ou pelo admin.
+              </p>
+              <button
+                onClick={() => {
+                  console.log('🔍 Verificando dados do localStorage...');
+                  console.log('userBookings:', localStorage.getItem('userBookings'));
+                  console.log('bookings:', localStorage.getItem('bookings'));
+                  console.log('registeredUsers:', localStorage.getItem('registeredUsers'));
+                  loadData();
+                }}
+                style={{
+                  background: '#FFC107',
+                  color: '#000',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                🔍 Verificar Dados
+              </button>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{
+                width: '100%',
+                background: 'rgba(0, 0, 0, 0.8)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                color: 'white'
+              }}>
+                <thead style={{ background: 'rgba(255, 215, 0, 0.2)' }}>
+                  <tr>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Cliente</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Serviço</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Data/Hora</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Valor</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Status</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Tipo</th>
+                    <th style={{ padding: '15px', textAlign: 'left' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map(booking => {
+                    const client = clients.find(c => c.id === booking.userId || c.id === booking.user_id);
+                    return (
+                      <tr key={booking.id} style={{ borderBottom: '1px solid rgba(255, 215, 0, 0.1)' }}>
+                        <td style={{ padding: '15px' }}>
+                          {client?.name || booking.clientName || booking.user_name || 'Cliente não encontrado'}
+                        </td>
+                        <td style={{ padding: '15px' }}>
+                          {booking.serviceName || booking.service_name || 'Serviço'}
+                        </td>
+                        <td style={{ padding: '15px' }}>
+                          {formatDate(booking.date)}<br />
+                          <small>{booking.time}</small>
+                        </td>
+                        <td style={{ padding: '15px' }}>{formatCurrency(booking.price || 0)}</td>
+                        <td style={{ padding: '15px' }}>{getStatusBadge(booking.status || 'pending')}</td>
+                        <td style={{ padding: '15px' }}>
+                          {booking.afterHours ? (
+                            <span style={{ 
+                              background: '#FF9800', 
+                              color: 'white', 
+                              padding: '4px 8px', 
+                              borderRadius: '12px', 
+                              fontSize: '0.8rem' 
+                            }}>
+                              Pós-expediente
+                            </span>
+                          ) : (
+                            <span style={{ 
+                              background: '#4CAF50', 
+                              color: 'white', 
+                              padding: '4px 8px', 
+                              borderRadius: '12px', 
+                              fontSize: '0.8rem' 
+                            }}>
+                              Comercial
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '15px' }}>
+                          {(booking.status === 'confirmed' || !booking.status) && (
+                            <button
+                              onClick={() => handleFinishService(booking)}
+                              style={{
+                                background: '#FFD700',
+                                color: '#000',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.8rem',
+                                fontWeight: '600'
+                              }}
+                            >
+                              ✅ Finalizar
+                            </button>
+                          )}
+                          {booking.status === 'completed' && (
+                            <span style={{ 
+                              color: '#4CAF50', 
                               fontSize: '0.8rem',
                               fontWeight: '600'
-                            }}
-                          >
-                            ✅ Finalizar
-                          </button>
-                        )}
-                        {booking.status === 'completed' && (
-                          <span style={{ 
-                            color: '#4CAF50', 
-                            fontSize: '0.8rem',
-                            fontWeight: '600'
-                          }}>
-                            ✅ Concluído
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            }}>
+                              ✅ Concluído
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

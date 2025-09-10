@@ -264,5 +264,18 @@ def api_bookings():
     
     return jsonify(bookings_db)
 
+# Endpoint de debug para verificar dados
+@app.route('/api/debug', methods=['GET'])
+def api_debug():
+    return jsonify({
+        'users_count': len(users_db),
+        'bookings_count': len(bookings_db),
+        'services_count': len(services_db),
+        'users_sample': users_db[:3] if users_db else [],
+        'bookings_sample': bookings_db[:3] if bookings_db else [],
+        'services_sample': services_db[:3] if services_db else [],
+        'timestamp': datetime.now().isoformat()
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000, debug=True)

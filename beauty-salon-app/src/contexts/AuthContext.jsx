@@ -49,13 +49,32 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('registeredUsers', JSON.stringify(mergedUsers));
         }
         
-        // Sincronizar agendamentos - usar 'userBookings' como chave padrão
+        // Sincronizar agendamentos - garantir compatibilidade com múltiplas chaves
         if (serverData.bookings && Array.isArray(serverData.bookings)) {
-          const localBookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
-          const mergedBookings = mergeArraysById(localBookings, serverData.bookings);
+          const sources = ['userBookings', 'bookings', 'allBookings'];
+          let localBookings = [];
+          
+          // Coletar agendamentos de todas as fontes
+          sources.forEach(source => {
+            const sourceData = JSON.parse(localStorage.getItem(source) || '[]');
+            if (sourceData.length > 0) {
+              localBookings = localBookings.concat(sourceData);
+            }
+          });
+          
+          // Remover duplicatas baseado no ID
+          const uniqueLocalBookings = localBookings.filter((booking, index, self) => 
+            index === self.findIndex(b => b.id === booking.id)
+          );
+          
+          const mergedBookings = mergeArraysById(uniqueLocalBookings, serverData.bookings);
+          
+          // Salvar em todas as chaves para compatibilidade
           localStorage.setItem('userBookings', JSON.stringify(mergedBookings));
-          // Manter compatibilidade com outras chaves
           localStorage.setItem('bookings', JSON.stringify(mergedBookings));
+          localStorage.setItem('allBookings', JSON.stringify(mergedBookings));
+          
+          console.log('📋 Agendamentos sincronizados:', mergedBookings.length);
         }
         
         // Sincronizar serviços
