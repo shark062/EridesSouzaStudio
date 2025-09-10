@@ -17,10 +17,14 @@
     "@mui/x-date-pickers": "^8.11.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.18",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.2",
     "lucide-react": "^0.543.0",
     "react": "^19.1.1",
+    "react-canvas-signature": "^1.0.0",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.2",
+    "react-signature-canvas": "^1.1.0-alpha.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

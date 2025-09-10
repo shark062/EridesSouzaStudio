@@ -4,7 +4,7 @@ modules = ["nodejs-20", "web", "python-3.11"]
 expertMode = true
 
 [workflows]
-runButton = "Full App Sync"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Flask App"
@@ -23,6 +23,10 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Beauty Salon App"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
 
 [[workflows.workflow]]
 name = "Beauty Salon App"
@@ -74,6 +78,18 @@ args = "python app.py"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd beauty-salon-app && npm run dev"
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 3000
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 3000
