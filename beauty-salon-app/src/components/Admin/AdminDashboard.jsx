@@ -4,7 +4,7 @@ import { theme, getCardStyle, getButtonStyle } from '../../utils/theme';
 import AutomationPanel from './AutomationPanel';
 import TechniqueForm from './TechniqueForm';
 import SignaturePad from '../Common/SignaturePad';
-import PDFGenerator from '../../utils/pdfGenerator';
+import { PDFGenerator } from '../../utils/pdfGenerator';
 import PDFPreview from './PDFPreview';
 import n8nService from '../../services/n8nService';
 import '../Layout/Layout.css';
@@ -534,7 +534,10 @@ const AdminDashboard = () => {
 
   // Função para regenerar o termo de agendamentos concluídos
   const handleGenerateCompletedTerm = async (booking) => {
+    console.log('🚀 Iniciando geração de termo PDF...');
+    
     if (!booking) {
+      console.error('❌ Booking não fornecido');
       alert('Dados do agendamento não encontrados.');
       return;
     }
@@ -627,7 +630,17 @@ const AdminDashboard = () => {
         price: booking.price || 0
       };
 
+      console.log('🔧 Verificando PDFGenerator:', PDFGenerator);
+      
+      if (!PDFGenerator) {
+        console.error('❌ PDFGenerator não encontrado!');
+        alert('Erro: Gerador de PDF não carregado. Recarregue a página.');
+        return;
+      }
+
+      console.log('🔨 Criando instância do PDFGenerator...');
       const pdfGenerator = new PDFGenerator();
+      console.log('✅ PDFGenerator criado:', pdfGenerator);
       const pdf = await pdfGenerator.generateServiceTermPDF(
         bookingData,
         serviceRecord.questionnaireData,

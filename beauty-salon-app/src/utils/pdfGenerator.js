@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-export class PDFGenerator {
+class PDFGenerator {
   constructor() {
     this.doc = new jsPDF();
     this.pageHeight = this.doc.internal.pageSize.height;
@@ -204,4 +204,5 @@ export class PDFGenerator {
   }
 }
 
+export { PDFGenerator };
 export default PDFGenerator;

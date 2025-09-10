@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { getCardStyle, getButtonStyle } from '../../utils/theme';
-import PDFGenerator from '../../utils/pdfGenerator';
+import { PDFGenerator } from '../../utils/pdfGenerator';
 
 const PDFPreview = ({ 
   booking, 
