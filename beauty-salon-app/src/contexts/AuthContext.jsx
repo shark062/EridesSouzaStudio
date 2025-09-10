@@ -2,6 +2,13 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+// Configuração de sincronização de dados
+const SYNC_CONFIG = {
+  apiBase: 'http://0.0.0.0:3000/api',
+  syncInterval: 30000, // 30 segundos
+  maxRetries: 3
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -14,6 +21,69 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState('disconnected');
+
+  // Funções de sincronização
+  const syncWithServer = async () => {
+    try {
+      setSyncStatus('syncing');
+      
+      // Buscar dados do servidor
+      const response = await fetch(`${SYNC_CONFIG.apiBase}/sync`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const serverData = await response.json();
+        
+        // Sincronizar usuários
+        if (serverData.users) {
+          localStorage.setItem('registeredUsers', JSON.stringify(serverData.users));
+        }
+        
+        // Sincronizar agendamentos
+        if (serverData.bookings) {
+          localStorage.setItem('bookings', JSON.stringify(serverData.bookings));
+        }
+        
+        // Sincronizar serviços
+        if (serverData.services) {
+          localStorage.setItem('services', JSON.stringify(serverData.services));
+        }
+        
+        setSyncStatus('connected');
+        console.log('✅ Dados sincronizados com sucesso');
+      } else {
+        throw new Error('Falha na sincronização');
+      }
+    } catch (error) {
+      console.log('📱 Modo offline - dados locais mantidos');
+      setSyncStatus('offline');
+    }
+  };
+
+  const pushDataToServer = async (dataType, data) => {
+    try {
+      const response = await fetch(`${SYNC_CONFIG.apiBase}/sync/${dataType}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        await syncWithServer(); // Resincronizar após push
+        return { success: true };
+      }
+    } catch (error) {
+      console.log('📱 Dados salvos localmente, sincronizarão quando conectar');
+    }
+    return { success: false };
+  };
 
   useEffect(() => {
     // Verificar se há usuário logado no localStorage
@@ -24,7 +94,28 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(savedUser));
       setIsAdmin(savedIsAdmin);
     }
+
+    // Iniciar sincronização
+    syncWithServer();
+    
+    // Configurar sincronização automática
+    const syncInterval = setInterval(syncWithServer, SYNC_CONFIG.syncInterval);
+    
+    // Listener para detectar quando a aba fica ativa
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        syncWithServer();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     setLoading(false);
+
+    return () => {
+      clearInterval(syncInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const login = async (username, password) => {
@@ -84,6 +175,9 @@ export const AuthProvider = ({ children }) => {
     users.push(newUser);
     localStorage.setItem('registeredUsers', JSON.stringify(users));
     
+    // Tentar sincronizar com servidor
+    await pushDataToServer('users', users);
+    
     return { success: true, message: 'Usuário registrado com sucesso' };
   };
 
@@ -126,10 +220,13 @@ export const AuthProvider = ({ children }) => {
     user,
     isAdmin,
     loading,
+    syncStatus,
     login,
     register,
     updateUserProfile,
-    logout
+    logout,
+    syncWithServer,
+    pushDataToServer
   };
 
   return (

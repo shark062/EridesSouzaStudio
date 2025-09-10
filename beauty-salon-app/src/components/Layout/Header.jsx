@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { theme, getButtonStyle } from '../../utils/theme';
+import SyncStatus from '../Common/SyncStatus';
 import './Layout.css';
 
 const Header = () => {
@@ -33,21 +32,21 @@ const Header = () => {
       reader.onload = (e) => {
         const photoData = e.target.result;
         setProfilePhoto(photoData);
-        
+
         // Atualizar no localStorage
         const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         const updatedUsers = users.map(u => 
           u.id === user.id ? { ...u, profilePhoto: photoData } : u
         );
         localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-        
+
         // Atualizar usuário atual
         const currentUser = JSON.parse(localStorage.getItem('user'));
         if (currentUser) {
           currentUser.profilePhoto = photoData;
           localStorage.setItem('user', JSON.stringify(currentUser));
         }
-        
+
         alert('Foto de perfil atualizada com sucesso!');
       };
       reader.readAsDataURL(file);
@@ -56,7 +55,7 @@ const Header = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    
+
     switch(showModal) {
       case 'changePassword':
         // Alterar senha do usuário atual
@@ -67,7 +66,7 @@ const Header = () => {
         localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
         alert('Senha alterada com sucesso!');
         break;
-        
+
       case 'editProfile':
         // Editar dados do perfil
         const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
@@ -75,7 +74,7 @@ const Header = () => {
           u.id === user.id ? { ...u, name: formData.name || u.name, email: formData.email || u.email, phone: formData.phone || u.phone } : u
         );
         localStorage.setItem('registeredUsers', JSON.stringify(updatedProfile));
-        
+
         // Atualizar usuário atual
         const currentUser = JSON.parse(localStorage.getItem('user'));
         if (currentUser) {
@@ -87,7 +86,7 @@ const Header = () => {
         alert('Perfil atualizado com sucesso!');
         break;
     }
-    
+
     closeModal();
   };
 
@@ -116,7 +115,7 @@ const Header = () => {
           </div>
           {isAdmin && <span className="admin-badge">ADMIN</span>}
         </div>
-        
+
         <div className="user-section">
           <div className="user-info">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -138,7 +137,7 @@ const Header = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Menu Hambúrguer */}
           <div style={{ position: 'relative' }}>
             <div 
@@ -158,7 +157,7 @@ const Header = () => {
               <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
               <div style={{ width: '25px', height: '3px', background: '#FFFFFF', borderRadius: '2px' }}></div>
             </div>
-            
+
             {/* Menu Dropdown */}
             {showHamburgerMenu && (
               <div style={{
@@ -183,7 +182,7 @@ const Header = () => {
                   <h3 style={{ margin: '0 0 15px 0', color: '#FFD700', borderBottom: '1px solid #FFD700', paddingBottom: '10px' }}>
                     ⚙️ Menu de Opções
                   </h3>
-                  
+
                   {/* Upload de Foto */}
                   <div>
                     <label 
@@ -210,7 +209,7 @@ const Header = () => {
                       style={{ display: 'none' }}
                     />
                   </div>
-                  
+
                   <button
                     onClick={() => openModal('editProfile')}
                     style={{
@@ -226,7 +225,7 @@ const Header = () => {
                   >
                     👤 Editar Meus Dados
                   </button>
-                  
+
                   <button
                     onClick={() => openModal('changePassword')}
                     style={{
@@ -242,7 +241,7 @@ const Header = () => {
                   >
                     🔐 Alterar Senha
                   </button>
-                  
+
                   {isAdmin && (
                     <>
                       <div style={{ borderTop: '1px solid #FFD700', marginTop: '10px', paddingTop: '10px' }}>
@@ -250,7 +249,7 @@ const Header = () => {
                           🛠️ Funções Administrativas
                         </h4>
                       </div>
-                      
+
                       <button
                         onClick={() => window.location.href = '#admin-panel'}
                         style={{
@@ -268,7 +267,7 @@ const Header = () => {
                       </button>
                     </>
                   )}
-                  
+
                   <button
                     onClick={logout}
                     style={{
@@ -290,7 +289,7 @@ const Header = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Modais */}
       {showModal && (
         <div style={{
