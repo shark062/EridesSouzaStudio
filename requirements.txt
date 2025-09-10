@@ -1,17 +1,9 @@
 
 Flask==3.0.0
 Werkzeug==3.0.1
-flask
-flask
-requests
-requests
-requests
-flask
-flask-cors
-requests
-flask
 flask-cors
 requests
 Flask==3.0.0
 flask-cors
+requests
 Werkzeug==3.0.1
