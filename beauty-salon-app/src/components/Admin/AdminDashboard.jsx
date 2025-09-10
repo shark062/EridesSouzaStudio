@@ -90,7 +90,7 @@ const AdminDashboard = () => {
     try {
       // Carregar agendamentos de múltiplas fontes para garantir compatibilidade
       let allBookings = [];
-      
+
       // Tentar carregar de diferentes chaves do localStorage
       const sources = ['userBookings', 'bookings', 'allBookings'];
       for (const source of sources) {
@@ -300,7 +300,7 @@ const AdminDashboard = () => {
       });
 
       alert('Serviço finalizado com sucesso! O termo foi gerado e está sendo baixado.');
-      
+
     } catch (error) {
       console.error('Erro ao finalizar serviço:', error);
       alert('Erro ao gerar o termo. Tente novamente.');
@@ -309,7 +309,7 @@ const AdminDashboard = () => {
 
   const handleSendPDF = async (method) => {
     const { serviceData, pdfData } = formData;
-    
+
     try {
       switch (method) {
         case 'email':
@@ -532,6 +532,40 @@ const AdminDashboard = () => {
     );
   };
 
+  // Função para regenerar o termo de agendamentos concluídos
+  const handleGenerateCompletedTerm = async (booking) => {
+    if (!booking) return;
+
+    // Simular a obtenção dos dados necessários para o termo
+    // Em um cenário real, você buscaria esses dados do localStorage ou de um estado mais persistente
+    const completedServices = JSON.parse(localStorage.getItem('completedServices') || '[]');
+    const serviceRecord = completedServices.find(s => s.bookingId === booking.id);
+
+    if (!serviceRecord) {
+      alert('Dados do serviço concluído não encontrados para este agendamento.');
+      return;
+    }
+
+    try {
+      const pdfGenerator = new PDFGenerator();
+      const pdf = await pdfGenerator.generateServiceTermPDF(
+        { ...booking, clientName: booking.clientName || clients.find(c => c.id === booking.userId)?.name || 'Cliente Desconhecido' }, // Garantir que clientName esteja presente
+        serviceRecord.questionnaireData,
+        serviceRecord.techniqueData,
+        serviceRecord.clientSignature,
+        serviceRecord.professionalSignature
+      );
+
+      // Baixar PDF
+      pdf.save(`termo-servico-${booking.clientName || 'cliente'}-${booking.date}.pdf`);
+      alert('Termo gerado e pronto para download!');
+
+    } catch (error) {
+      console.error('Erro ao regenerar o termo:', error);
+      alert('Erro ao regenerar o termo. Tente novamente.');
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div style={{ 
@@ -599,7 +633,7 @@ const AdminDashboard = () => {
                'Offline'}
             </span>
           </div>
-          
+
           {lastSyncTime && (
             <div style={{
               background: 'rgba(33, 150, 243, 0.1)',
@@ -612,7 +646,7 @@ const AdminDashboard = () => {
               Última sync: {lastSyncTime.toLocaleTimeString()}
             </div>
           )}
-          
+
           <button
             onClick={() => {
               console.log('🔄 Forçando sincronização manual...');
@@ -678,23 +712,21 @@ const AdminDashboard = () => {
             )}
             <div style={{
               position: 'absolute',
-              bottom: '-5px',
-              right: '-5px',
-              background: '#4CAF50',
-              color: 'white',
-              borderRadius: '50%',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.8rem',
-              border: '2px solid white'
+              top: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              color: '#000',
+              padding: '8px 20px',
+              borderRadius: '20px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.4)'
             }}>
-              ✓
+              ✨ PAINEL ADMINISTRATIVO ✨
             </div>
           </div>
-          
+
           <div style={{ textAlign: 'left' }}>
             <h1 style={{ 
               margin: 0, 
@@ -1947,13 +1979,32 @@ const AdminDashboard = () => {
                             </button>
                           )}
                           {booking.status === 'completed' && (
-                            <span style={{ 
-                              color: '#4CAF50', 
-                              fontSize: '0.8rem',
-                              fontWeight: '600'
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              marginTop: '10px',
+                              flexWrap: 'wrap'
                             }}>
-                              ✅ Concluído
-                            </span>
+                              <span style={{
+                                color: '#4CAF50',
+                                fontSize: '0.9rem',
+                                fontWeight: '500'
+                              }}>
+                                ✅ Concluído em {new Date(booking.completedAt).toLocaleDateString('pt-BR')}
+                              </span>
+                              <button
+                                onClick={() => handleGenerateCompletedTerm(booking)}
+                                style={{
+                                  ...getButtonStyle('primary'),
+                                  padding: '6px 12px',
+                                  fontSize: '0.8rem',
+                                  marginLeft: 'auto'
+                                }}
+                              >
+                                📄 Gerar Termo
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -2080,7 +2131,7 @@ const AdminDashboard = () => {
                 onSignatureChange={setClientSignature}
                 initialSignature={clientSignature}
               />
-              
+
               <SignaturePad
                 title="Assinatura do Profissional"
                 onSignatureChange={setProfessionalSignature}
