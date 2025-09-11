@@ -2,13 +2,14 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-// Configuração de sincronização de dados
+// Configuração de sincronização de dados (TEMPORARIAMENTE DESABILITADA)
 const SYNC_CONFIG = {
   apiBase: `${window.location.protocol}//${window.location.hostname}:3000/api`,
-  syncInterval: 60000, // 1 minuto
-  maxRetries: 3,
-  retryDelay: 5000, // 5 segundos
-  timeout: 10000 // 10 segundos
+  syncInterval: 999999999, // Praticamente desabilitado
+  maxRetries: 0, // Sem retries
+  retryDelay: 60000, // 1 minuto
+  timeout: 5000, // 5 segundos
+  enabled: false // Flag para desabilitar completamente
 };
 
 export const useAuth = () => {
@@ -23,16 +24,41 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [syncStatus, setSyncStatus] = useState('connected'); // Sync status initialized to 'connected' for silent background operation
+  const [syncStatus, setSyncStatus] = useState('connected');
+  
+  // Controle de concorrência para evitar múltiplas sincronizações simultâneas
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Funções de sincronização melhoradas
-  const syncWithServer = async (retryCount = 0) => {
+  // Funções de sincronização melhoradas com controle de concorrência
+  const syncWithServer = async (currentRetryCount = 0) => {
+    // Verificar se a sincronização está desabilitada
+    if (!SYNC_CONFIG.enabled) {
+      console.log('🚫 Sincronização desabilitada - ignorando tentativa');
+      setSyncStatus('offline');
+      return false;
+    }
+    
+    // Evitar sincronizações simultâneas
+    if (isSyncing) {
+      console.log('⏸️ Sincronização já em andamento - ignorando nova tentativa');
+      return false;
+    }
+    
+    // Limitar número de retries
+    if (currentRetryCount >= SYNC_CONFIG.maxRetries) {
+      console.log('❌ Máximo de tentativas atingido - parando sincronização');
+      setSyncStatus('offline');
+      return false;
+    }
+    
+    setIsSyncing(true);
     try {
       // Sincronização silenciosa em segundo plano
-      if (retryCount === 0) {
-        setSyncStatus('connected');
+      if (currentRetryCount === 0) {
+        setSyncStatus('syncing');
       }
-      console.log('🔄 Iniciando sincronização...', { attempt: retryCount + 1 });
+      console.log('🔄 Iniciando sincronização...', { attempt: currentRetryCount + 1 });
 
       // Primeiro, enviar dados locais para o servidor
       await pushLocalDataToServer();
@@ -102,6 +128,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         setSyncStatus('connected');
+        setRetryCount(0); // Reset retry count on success
         console.log('✅ Sincronização completa com sucesso');
 
         // Disparar evento personalizado para notificar componentes
@@ -121,19 +148,28 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.warn('⚠️ Erro na sincronização:', error.message);
-
-      // Tentar novamente em caso de erro
-      if (retryCount < SYNC_CONFIG.maxRetries) { // Use configured max retries
-        console.log(`🔄 Tentando novamente em ${SYNC_CONFIG.retryDelay/1000}s... (${retryCount + 1}/${SYNC_CONFIG.maxRetries})`);
+      
+      // Só tentar novamente se não atingiu o máximo de retries
+      if (currentRetryCount < SYNC_CONFIG.maxRetries) {
+        const nextRetryCount = currentRetryCount + 1;
+        const delayMs = SYNC_CONFIG.retryDelay * Math.pow(2, currentRetryCount); // Backoff exponencial
+        console.log(`🔄 Tentando novamente em ${delayMs/1000}s... (${nextRetryCount}/${SYNC_CONFIG.maxRetries})`);
+        
+        setRetryCount(nextRetryCount);
+        setIsSyncing(false); // Liberar lock antes do retry
+        
         setTimeout(() => {
-          syncWithServer(retryCount + 1);
-        }, SYNC_CONFIG.retryDelay); // Use configured retry delay
+          syncWithServer(nextRetryCount);
+        }, delayMs);
       } else {
         console.log('📱 Modo offline - dados locais mantidos');
         setSyncStatus('offline');
+        setRetryCount(0);
       }
 
       return false;
+    } finally {
+      setIsSyncing(false); // Sempre liberar o lock de concorrência
     }
   };
 
@@ -226,44 +262,43 @@ export const AuthProvider = ({ children }) => {
       setIsAdmin(savedIsAdmin);
     }
 
-    // Função para iniciar sincronização com retry
+    // Sistema de sincronização TEMPORARIAMENTE DESABILITADO para corrigir problema de performance
     const startSync = async () => {
-      const success = await syncWithServer();
-
-      if (success) {
-        // Se sincronização foi bem-sucedida, configurar intervalo regular
-        syncIntervalId = setInterval(syncWithServer, SYNC_CONFIG.syncInterval); // Use configured sync interval
-      } else {
-        // Se falhou, tentar novamente em breve
-        retryTimeoutId = setTimeout(startSync, SYNC_CONFIG.retryDelay); // Use configured retry delay
-      }
+      console.log('🚫 Sistema de sincronização automática desabilitado temporariamente');
+      setSyncStatus('offline');
+      
+      // Não configurar intervalo automático - apenas manual
+      // syncIntervalId = setInterval(() => {
+      //   syncWithServer();
+      // }, SYNC_CONFIG.syncInterval);
     };
 
-    // Iniciar sincronização
-    startSync();
+    // Apenas definir como offline, sem sincronização automática
+    setTimeout(() => {
+      setSyncStatus('offline');
+      setLoading(false);
+    }, 1000);
 
-    // Listener para detectar quando a aba fica ativa
+    // Event listeners DESABILITADOS temporariamente
     const handleVisibilityChange = () => {
+      // Desabilitado - apenas log
       if (!document.hidden) {
-        console.log('👁️ Aba ficou ativa - sincronizando dados');
-        syncWithServer();
+        console.log('👁️ Aba ficou ativa (sync desabilitado)');
       }
     };
 
-    // Listener para mudanças no localStorage de outros dispositivos/abas
     const handleStorageChange = (e) => {
+      // Desabilitado - apenas log
       const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services'];
       if (watchedKeys.includes(e.key)) {
-        console.log('🔄 Dados alterados em outro dispositivo/aba:', e.key);
-        setTimeout(syncWithServer, 1000); // Delay para evitar conflitos
+        console.log('📁 Dados alterados:', e.key, '(sync desabilitado)');
       }
     };
 
-    // Listener para conexão de rede
     const handleOnline = () => {
-      console.log('🌐 Conexão restaurada - sincronizando...');
-      setSyncStatus('syncing');
-      setTimeout(syncWithServer, 500);
+      // Desabilitado - apenas log
+      console.log('🌐 Conexão restaurada (sync desabilitado)');
+      setSyncStatus('offline');
     };
 
     // Listener para perda de conexão
