@@ -66,7 +66,7 @@ const AdminDashboard = () => {
 
     // Listener para mudanças no localStorage
     const handleStorageChange = (e) => {
-      const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services'];
+      const watchedKeys = ['userBookings', 'bookings', 'allBookings', 'registeredUsers', 'services', 'plans'];
       if (watchedKeys.includes(e.key)) {
         console.log('📱 Dados atualizados:', e.key);
         setTimeout(() => {
