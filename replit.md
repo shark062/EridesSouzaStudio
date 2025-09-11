@@ -31,6 +31,7 @@ Estilo de comunicação preferido: Linguagem simples e cotidiana em português.
 - **Gestão de Clientes**: Informações detalhadas e histórico de cada cliente
 - **Analytics**: Taxa de ocupação, médias e estatísticas operacionais
 - **Top Clientes**: Ranking dos clientes mais fiéis e que mais gastam
+- **Gestão de Planos Mensais**: Criação, visualização e gerenciamento de planos de assinatura
 
 ## Arquitetura do Sistema
 
@@ -111,6 +112,8 @@ Aplicativo completo e funcional com todas as funcionalidades implementadas:
 ✅ **NOVO:** Ficha de cadastro completa com dados pessoais, endereço e documentos
 ✅ **NOVO:** Sistema de edição de perfil para clientes
 ✅ **CORRIGIDO:** Problema crítico de congelamento do menu hambúrguer resolvido (Set/2024)
+✅ **NOVO:** Sistema completo de planos mensais com CRUD (Set/2024)
+✅ **CORRIGIDO:** Navegação do menu hambúrguer para clientes e administradores (Set/2024)
 
 ## Correções Realizadas
 
@@ -120,6 +123,43 @@ Aplicativo completo e funcional com todas as funcionalidades implementadas:
 - **Solução**: Desabilitação temporária do sistema de sincronização automática
 - **Status**: ✅ Resolvido - Interface funcionando normalmente
 - **Ação futura**: Reimplementar sincronização com controles adequados quando necessário
+
+### Correção da Navegação do Menu Hambúrguer (Set/2024)
+- **Problema**: Menu hambúrguer não navegava corretamente para funcionalidades
+- **Sintoma**: Botões do menu apenas fechavam o menu sem navegar para a seção
+- **Solução**: 
+  - Clientes: Implementação de eventos CustomEvent com payload correto
+  - Admin: Sistema de navegação baseado em hash (#admin-section)
+- **Status**: ✅ Resolvido - Navegação funcionando para todas as seções
+- **Resultado**: Menu agora navega corretamente para Dashboard, Serviços, Agendamentos, etc.
+
+## Sistema de Planos Mensais (Set/2024)
+
+### Funcionalidades Implementadas
+- **Criação de Planos**: Modal completo com validação de campos obrigatórios
+- **Visualização**: Interface em grid mostrando todos os planos criados
+- **Persistência**: Armazenamento em localStorage com sincronização automática
+- **Navegação**: Integração completa com menu hambúrguer administrativo
+- **Validação**: Campos obrigatórios (nome, preço, benefícios) com validação numérica
+
+### Estrutura de Dados dos Planos
+```json
+{
+  "id": "timestamp_string",
+  "name": "Nome do Plano",
+  "monthlyPrice": 99.99,
+  "benefits": ["Benefício 1", "Benefício 2"],
+  "includedServiceIds": [1, 2, 3],
+  "active": true,
+  "createdAt": "2024-09-11T02:30:00.000Z"
+}
+```
+
+### Interface do Usuario
+- **Acesso Admin**: Menu hambúrguer → "📋 Planos Mensais"
+- **Criação**: Menu hambúrguer → "➕ Criar Plano Mensal"
+- **Visualização**: Grid de cards com informações completas de cada plano
+- **Estado Vazio**: Mensagem informativa quando não há planos criados
 
 ## Funcionalidades Médicas e Documentação
 
