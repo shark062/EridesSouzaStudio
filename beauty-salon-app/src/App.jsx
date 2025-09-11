@@ -1,15 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginForm from './components/Auth/LoginForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import Header from './components/Layout/Header';
 import ClientDashboard from './components/Dashboard/ClientDashboard';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import backgroundImage from './assets/background-nails.jpg';
 import './App.css';
 
 function AppContent() {
   const { user, isAdmin, loading } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
+
+  // Aplicar imagem de fundo com filtro branco de 30%
+  useEffect(() => {
+    document.body.style.background = `
+      linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+      url(${backgroundImage}) center center/cover no-repeat fixed
+    `;
+    
+    // Cleanup quando o componente for desmontado
+    return () => {
+      document.body.style.background = '';
+    };
+  }, []);
 
   if (loading) {
     return (

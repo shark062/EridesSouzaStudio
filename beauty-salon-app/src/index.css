@@ -59,7 +59,7 @@ body {
   position: relative;
 }
 
-/* Background com efeito de ondas suaves */
+/* Background overlay com filtro branco de 30% de transparência */
 body::before {
   content: '';
   position: fixed;
@@ -67,10 +67,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(139, 157, 131, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(212, 184, 150, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 60%, rgba(139, 157, 131, 0.05) 0%, transparent 50%);
+  background: rgba(255, 255, 255, 0.3);
   pointer-events: none;
   z-index: -1;
 }
