@@ -10,6 +10,11 @@ const Header = () => {
   const [formData, setFormData] = useState({});
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || null);
 
+  // Get data for modals
+  const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+  const availableClients = registeredUsers.filter(u => u.role !== 'admin');
+  const availableServices = JSON.parse(localStorage.getItem('services') || '[]');
+
   const toggleHamburgerMenu = () => {
     const newState = !showHamburgerMenu;
     setShowHamburgerMenu(newState);
@@ -160,13 +165,12 @@ const Header = () => {
         // Criar novo agendamento (implementação básica)
         const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
         const newBooking = {
-          id: Date.now().toString(),
-          userId: formData.clientId,
+          id: Date.now(),
+          userId: formData.clientId || user.id,
           serviceId: formData.serviceId,
           date: formData.date,
           time: formData.time,
-          status: 'confirmed',
-          createdAt: new Date().toISOString()
+          status: 'confirmed'
         };
         const updatedBookings = [...bookings, newBooking];
         localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
@@ -1174,7 +1178,11 @@ const Header = () => {
                   }}
                 >
                   <option value="">Selecionar cliente</option>
-                  {/* Aqui seria necessário ter acesso aos clientes - implementação básica */}
+                  {availableClients.map(client => (
+                    <option key={client.id} value={client.id}>
+                      {client.name} - {client.email}
+                    </option>
+                  ))}
                 </select>
                 <select
                   value={formData.serviceId || ''}
@@ -1189,7 +1197,11 @@ const Header = () => {
                   }}
                 >
                   <option value="">Selecionar serviço</option>
-                  {/* Aqui seria necessário ter acesso aos serviços - implementação básica */}
+                  {availableServices.map(service => (
+                    <option key={service.id} value={service.id}>
+                      {service.image} {service.name} - R$ {service.price.toFixed(2)}
+                    </option>
+                  ))}
                 </select>
                 <input
                   type="date"
