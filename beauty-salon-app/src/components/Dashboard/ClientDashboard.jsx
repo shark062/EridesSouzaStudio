@@ -99,7 +99,7 @@ const ClientDashboard = () => {
 
     // Carregar notificações
     loadNotifications();
-    
+
     // Automação de aniversário N8n
     if (isBirthday) {
       n8nService.automate_birthdayReminder(user).then(result => {
@@ -108,7 +108,7 @@ const ClientDashboard = () => {
         }
       }).catch(console.error);
     }
-    
+
     // Carregar mensagens do chat
     const savedMessages = JSON.parse(localStorage.getItem(`chatMessages_${user.id}`) || '[]');
     setChatMessages(savedMessages);
@@ -171,16 +171,16 @@ const ClientDashboard = () => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-    
+
     const notifications = [];
-    
+
     // Notificações de agendamentos próximos
     const upcomingBookings = getUpcomingBookings();
     upcomingBookings.forEach(booking => {
       const bookingDate = new Date(booking.date + 'T' + booking.time);
       const timeDiff = bookingDate - today;
       const hoursDiff = timeDiff / (1000 * 60 * 60);
-      
+
       if (hoursDiff <= 24 && hoursDiff > 0) {
         notifications.push({
           id: `booking_${booking.id}`,
@@ -192,7 +192,7 @@ const ClientDashboard = () => {
         });
       }
     });
-    
+
     // Notificação de aniversário
     if (isBirthday) {
       notifications.push({
@@ -204,7 +204,7 @@ const ClientDashboard = () => {
         read: false
       });
     }
-    
+
     // Notificações de pontos de fidelidade
     if (userStats.loyaltyPoints >= userStats.nextReward) {
       notifications.push({
@@ -216,7 +216,7 @@ const ClientDashboard = () => {
         read: false
       });
     }
-    
+
     setNotifications(notifications);
   };
 
@@ -230,7 +230,7 @@ const ClientDashboard = () => {
 
   const sendMessage = () => {
     if (!newMessage.trim()) return;
-    
+
     const message = {
       id: Date.now(),
       text: newMessage,
@@ -238,17 +238,17 @@ const ClientDashboard = () => {
       time: new Date().toISOString(),
       status: 'sent'
     };
-    
+
     const updatedMessages = [...chatMessages, message];
     setChatMessages(updatedMessages);
     localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
     setNewMessage('');
-    
+
     // Integração N8n para resposta automática inteligente
     setTimeout(async () => {
       try {
         const aiResponse = await n8nService.sendChatMessage(newMessage, user.id, chatMessages);
-        
+
         const autoReply = {
           id: Date.now() + 1,
           text: aiResponse.reply,
@@ -257,11 +257,11 @@ const ClientDashboard = () => {
           status: 'received',
           isAI: !aiResponse.offline
         };
-        
+
         const newMessages = [...updatedMessages, autoReply];
         setChatMessages(newMessages);
         localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
-        
+
         // Executar ações sugeridas pela IA (se houver)
         if (aiResponse.actions && aiResponse.actions.length > 0) {
           // Processar ações automáticas como agendamento, cancelamento, etc.
@@ -277,7 +277,7 @@ const ClientDashboard = () => {
           time: new Date().toISOString(),
           status: 'received'
         };
-        
+
         const newMessages = [...updatedMessages, autoReply];
         setChatMessages(newMessages);
         localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(newMessages));
@@ -291,6 +291,13 @@ const ClientDashboard = () => {
       .filter(booking => new Date(booking.date + 'T' + booking.time) < now && booking.status === 'completed')
       .sort((a, b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
   };
+
+  // Mock data for demonstration purposes as userData, loyaltyData, and upcomingBookings are not defined in the original code.
+  // In a real application, these would likely come from state or context.
+  const userData = { totalVisits: userStats.totalVisits };
+  const loyaltyData = { points: userStats.loyaltyPoints, nextReward: userStats.nextReward };
+  const upcomingBookings = getUpcomingBookings();
+
 
   return (
     <div className="dashboard-container" style={{
@@ -314,26 +321,78 @@ const ClientDashboard = () => {
         </div>
       )}
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span className="stat-value">{userStats.totalVisits}</span>
-          <span className="stat-label">Visitas Totais</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{userStats.loyaltyPoints}</span>
-          <span className="stat-label">Pontos de Fidelidade</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{userStats.nextReward - userStats.loyaltyPoints}</span>
-          <span className="stat-label">Para Próximo Prêmio</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-value">{getUpcomingBookings().length}</span>
-          <span className="stat-label">Próximos Agendamentos</span>
-        </div>
-      </div>
+      {/* Cards de estatísticas */}
+        <div className="stats-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+          marginBottom: '30px'
+        }}>
+          <div className="dashboard-card" style={{
+            ...getCardStyle(true),
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '2px solid rgba(255, 215, 0, 0.3)',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            padding: '30px 24px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '15px' }}>
+              {userData.totalVisits || 0}
+            </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '1rem', fontWeight: '500', letterSpacing: '1px' }}>
+              VISITAS TOTAIS
+            </div>
+          </div>
 
-      
+          <div className="dashboard-card" style={{
+            ...getCardStyle(true),
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '2px solid rgba(255, 215, 0, 0.3)',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            padding: '30px 24px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '15px' }}>
+              {loyaltyData.points}
+            </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '1rem', fontWeight: '500', letterSpacing: '1px' }}>
+              PONTOS DE FIDELIDADE
+            </div>
+          </div>
+
+          <div className="dashboard-card" style={{
+            ...getCardStyle(true),
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '2px solid rgba(255, 215, 0, 0.3)',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            padding: '30px 24px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '15px' }}>
+              {loyaltyData.nextReward ? loyaltyData.nextReward - loyaltyData.points : 100}
+            </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '1rem', fontWeight: '500', letterSpacing: '1px' }}>
+              PARA PRÓXIMO PRÊMIO
+            </div>
+          </div>
+
+          <div className="dashboard-card" style={{
+            ...getCardStyle(true),
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: '2px solid rgba(255, 215, 0, 0.3)',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            padding: '30px 24px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#FFD700', marginBottom: '15px' }}>
+              {upcomingBookings.length}
+            </div>
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '1rem', fontWeight: '500', letterSpacing: '1px' }}>
+              PRÓXIMOS AGENDAMENTOS
+            </div>
+          </div>
+        </div>
+
 
       {/* Painel de Notificações */}
       {showNotifications && (
@@ -434,7 +493,7 @@ const ClientDashboard = () => {
               ✕
             </button>
           </div>
-          
+
           {/* Mensagens */}
           <div style={{
             flex: 1,
@@ -482,7 +541,7 @@ const ClientDashboard = () => {
               </div>
             )}
           </div>
-          
+
           {/* Input de Mensagem */}
           <div style={{
             padding: '15px',
@@ -520,7 +579,7 @@ const ClientDashboard = () => {
         </div>
       )}
 
-      
+
 
       {activeTab === 'services' && (
         <div>
@@ -567,7 +626,7 @@ const ClientDashboard = () => {
                         {booking.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
                       </span>
                     </p>
-                    
+
                     {/* Sistema de Avaliação para agendamentos passados */}
                     {new Date(booking.date + 'T' + booking.time) < new Date() && booking.status === 'confirmed' && (
                       <RatingSystem 
@@ -650,7 +709,7 @@ const ClientDashboard = () => {
                         Concluído ✓
                       </span>
                     </p>
-                    
+
                     {/* Informações adicionais */}
                     <div style={{
                       marginTop: '15px',
@@ -671,7 +730,7 @@ const ClientDashboard = () => {
                         </p>
                       )}
                     </div>
-                    
+
                     {/* Botão para reagendar */}
                     <button
                       onClick={() => {
@@ -705,7 +764,7 @@ const ClientDashboard = () => {
               </div>
             )}
           </div>
-          
+
           {/* Resumo de Estatísticas */}
           {getServiceHistory().length > 0 && (
             <div style={{
