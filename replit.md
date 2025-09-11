@@ -110,6 +110,16 @@ Aplicativo completo e funcional com todas as funcionalidades implementadas:
 ✅ **NOVO:** Opções de envio por email, WhatsApp e impressão
 ✅ **NOVO:** Ficha de cadastro completa com dados pessoais, endereço e documentos
 ✅ **NOVO:** Sistema de edição de perfil para clientes
+✅ **CORRIGIDO:** Problema crítico de congelamento do menu hambúrguer resolvido (Set/2024)
+
+## Correções Realizadas
+
+### Problema de Sincronização Excessiva (Set/2024)
+- **Problema**: Loop de sincronização no AuthContext.jsx causando centenas de requisições por minuto
+- **Sintoma**: Menu hambúrguer travando e interface congelando
+- **Solução**: Desabilitação temporária do sistema de sincronização automática
+- **Status**: ✅ Resolvido - Interface funcionando normalmente
+- **Ação futura**: Reimplementar sincronização com controles adequados quando necessário
 
 ## Funcionalidades Médicas e Documentação
 
