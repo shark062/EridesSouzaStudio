@@ -64,16 +64,40 @@ const Header = () => {
 
     switch(showModal) {
       case 'changePassword':
+        // Verificar se as senhas coincidem
+        if (formData.newPassword !== formData.confirmPassword) {
+          alert('❌ As senhas não coincidem! Por favor, tente novamente.');
+          return;
+        }
+        
+        // Verificar se a senha tem pelo menos 6 caracteres
+        if (formData.newPassword.length < 6) {
+          alert('❌ A senha deve ter pelo menos 6 caracteres!');
+          return;
+        }
+        
         // Alterar senha do usuário atual
         const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         const updatedUsers = users.map(u => 
           u.id === user.id ? { ...u, password: formData.newPassword } : u
         );
         localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers));
-        alert('Senha alterada com sucesso!');
+        alert('✅ Senha alterada com sucesso!');
         break;
 
       case 'editProfile':
+        // Verificar se pelo menos um campo foi preenchido
+        if (!formData.name && !formData.email && !formData.phone) {
+          alert('❌ Por favor, preencha pelo menos um campo para atualizar!');
+          return;
+        }
+        
+        // Validar email se fornecido
+        if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+          alert('❌ Por favor, insira um email válido!');
+          return;
+        }
+        
         // Editar dados do perfil
         const allUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
         const updatedProfile = allUsers.map(u => 
@@ -89,7 +113,7 @@ const Header = () => {
           currentUser.phone = formData.phone || currentUser.phone;
           localStorage.setItem('user', JSON.stringify(currentUser));
         }
-        alert('Perfil atualizado com sucesso!');
+        alert('✅ Perfil atualizado com sucesso!');
         break;
 
       case 'changeAdminCredentials':
@@ -105,6 +129,18 @@ const Header = () => {
         break;
 
       case 'addService':
+        // Validar campos obrigatórios
+        if (!formData.serviceName || !formData.price || !formData.duration) {
+          alert('❌ Por favor, preencha todos os campos obrigatórios!');
+          return;
+        }
+        
+        // Validar preço
+        if (parseFloat(formData.price) <= 0) {
+          alert('❌ O preço deve ser maior que zero!');
+          return;
+        }
+        
         // Adicionar novo serviço
         const services = JSON.parse(localStorage.getItem('services') || '[]');
         const newService = {
@@ -117,7 +153,7 @@ const Header = () => {
         };
         const updatedServices = [...services, newService];
         localStorage.setItem('services', JSON.stringify(updatedServices));
-        alert('Serviço adicionado com sucesso!');
+        alert('✅ Serviço adicionado com sucesso!');
         break;
 
       case 'createBooking':
