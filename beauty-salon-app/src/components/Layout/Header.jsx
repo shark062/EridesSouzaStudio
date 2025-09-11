@@ -345,7 +345,11 @@ const Header = () => {
 
                       <button
                         onClick={() => {
-                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'services' }));
+                          // Disparar evento específico para mudança de aba
+                          const event = new CustomEvent('tabChange', { 
+                            detail: { tab: 'services' }
+                          });
+                          window.dispatchEvent(event);
                           setShowHamburgerMenu(false);
                         }}
                         style={{
@@ -368,7 +372,10 @@ const Header = () => {
 
                       <button
                         onClick={() => {
-                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'bookings' }));
+                          const event = new CustomEvent('tabChange', { 
+                            detail: { tab: 'bookings' }
+                          });
+                          window.dispatchEvent(event);
                           setShowHamburgerMenu(false);
                         }}
                         style={{
@@ -391,7 +398,10 @@ const Header = () => {
 
                       <button
                         onClick={() => {
-                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'schedule' }));
+                          const event = new CustomEvent('tabChange', { 
+                            detail: { tab: 'schedule' }
+                          });
+                          window.dispatchEvent(event);
                           setShowHamburgerMenu(false);
                         }}
                         style={{
@@ -414,7 +424,10 @@ const Header = () => {
 
                       <button
                         onClick={() => {
-                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'history' }));
+                          const event = new CustomEvent('tabChange', { 
+                            detail: { tab: 'history' }
+                          });
+                          window.dispatchEvent(event);
                           setShowHamburgerMenu(false);
                         }}
                         style={{
@@ -437,7 +450,10 @@ const Header = () => {
 
                       <button
                         onClick={() => {
-                          window.dispatchEvent(new CustomEvent('changeTab', { detail: 'loyalty' }));
+                          const event = new CustomEvent('tabChange', { 
+                            detail: { tab: 'loyalty' }
+                          });
+                          window.dispatchEvent(event);
                           setShowHamburgerMenu(false);
                         }}
                         style={{

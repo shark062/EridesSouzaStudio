@@ -85,6 +85,34 @@ const ClientDashboard = () => {
     }
   ];
 
+  // Mock function to load user data, replace with actual API call if needed
+  const loadUserData = () => {
+    // Placeholder for loading user specific data if not already available
+    // For example, fetching user-specific settings or preferences
+  };
+
+  useEffect(() => {
+    loadUserData();
+
+    const handleDataSync = () => {
+      loadUserData();
+    };
+
+    const handleTabChange = (event) => {
+      const { tab } = event.detail;
+      setActiveTab(tab);
+    };
+
+    window.addEventListener('dataSync', handleDataSync);
+    window.addEventListener('tabChange', handleTabChange);
+
+    return () => {
+      window.removeEventListener('dataSync', handleDataSync);
+      window.removeEventListener('tabChange', handleTabChange);
+    };
+  }, [user]);
+
+
   useEffect(() => {
     // Carregar agendamentos do usuário
     const bookings = JSON.parse(localStorage.getItem('userBookings') || '[]');
@@ -126,22 +154,24 @@ const ClientDashboard = () => {
       setChatOpen(!chatOpen);
     };
 
-    const handleTabChange = (event) => {
-      setActiveTab(event.detail);
-    };
+    // The handleTabChange listener is now correctly placed in the first useEffect.
+    // Keeping this commented to avoid duplication and ensure only one listener.
+    // const handleTabChange = (event) => {
+    //   setActiveTab(event.detail);
+    // };
 
     window.addEventListener('hamburgerMenuToggle', handleMenuToggle);
     window.addEventListener('toggleNotifications', handleToggleNotifications);
     window.addEventListener('toggleChat', handleToggleChat);
-    window.addEventListener('changeTab', handleTabChange);
+    // window.addEventListener('changeTab', handleTabChange); // This is replaced by 'tabChange'
 
     return () => {
       window.removeEventListener('hamburgerMenuToggle', handleMenuToggle);
       window.removeEventListener('toggleNotifications', handleToggleNotifications);
       window.removeEventListener('toggleChat', handleToggleChat);
-      window.removeEventListener('changeTab', handleTabChange);
+      // window.removeEventListener('changeTab', handleTabChange); // This is replaced by 'tabChange'
     };
-  }, [user.id]);
+  }, [user.id, showNotifications, chatOpen]); // Added dependencies for state changes
 
   const getUpcomingBookings = () => {
     const now = new Date();
