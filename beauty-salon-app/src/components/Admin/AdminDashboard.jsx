@@ -16,6 +16,7 @@ const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [services, setServices] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [showModal, setShowModal] = useState(null);
   const [formData, setFormData] = useState({});
   const [selectedService, setSelectedService] = useState(null);
@@ -39,11 +40,12 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadData();
     loadServices();
+    loadPlans();
 
     // Controlar seção ativa baseado no hash da URL
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#admin-', '');
-      if (['overview', 'services', 'bookings', 'clients', 'automation'].includes(hash)) {
+      if (['overview', 'services', 'bookings', 'clients', 'automation', 'plans'].includes(hash)) {
         setActiveTab(hash);
       } else {
         setActiveTab('overview');
@@ -59,6 +61,7 @@ const AdminDashboard = () => {
       setLastSyncTime(new Date());
       loadData();
       loadServices();
+      loadPlans();
     };
 
     // Listener para mudanças no localStorage
@@ -69,6 +72,7 @@ const AdminDashboard = () => {
         setTimeout(() => {
           loadData();
           loadServices();
+          loadPlans();
         }, 100); // Pequeno delay para garantir que os dados foram salvos
       }
     };
@@ -79,12 +83,14 @@ const AdminDashboard = () => {
         console.log('👁️ Aba ficou ativa - recarregando dados');
         loadData();
         loadServices();
+        loadPlans();
       }
     };
 
     // Recarregar dados a cada 10 segundos
     const dataRefreshInterval = setInterval(() => {
       loadData();
+      loadPlans();
     }, 10000);
 
     window.addEventListener('dataSync', handleDataSync);
@@ -172,6 +178,11 @@ const AdminDashboard = () => {
 
     const savedServices = JSON.parse(localStorage.getItem('services') || JSON.stringify(defaultServices));
     setServices(savedServices);
+  };
+
+  const loadPlans = () => {
+    const savedPlans = JSON.parse(localStorage.getItem('plans') || '[]');
+    setPlans(savedPlans);
   };
 
   const calculateStats = (bookings, clients) => {
@@ -1562,6 +1573,7 @@ const AdminDashboard = () => {
           {activeTab === 'bookings' && '📅 Gestão de Agendamentos'}
           {activeTab === 'clients' && '👥 Gestão de Clientes'}
           {activeTab === 'automation' && '🤖 Automação N8n'}
+          {activeTab === 'plans' && '📋 Gestão de Planos Mensais'}
         </h2>
         <p style={{ margin: '5px 0 0 0', color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>
           Use o menu hambúrguer do cabeçalho para navegar entre as seções
@@ -2237,6 +2249,64 @@ const AdminDashboard = () => {
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'plans' && (
+        <div>
+          <h2 style={{ color: '#FFD700', marginBottom: '25px', textAlign: 'center' }}>
+            📋 Gestão de Planos Mensais
+          </h2>
+
+          <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => openModal('createPlan')}
+              style={{
+                padding: '10px 20px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              ➕ Criar Plano Mensal
+            </button>
+          </div>
+
+          <div className="dashboard-grid">
+            {plans.length > 0 ? (
+              plans.map(plan => (
+                <div key={plan.id} className="dashboard-card">
+                  <div className="card-header">
+                    <span className="card-icon">📋</span>
+                    <h3 className="card-title">{plan.name}</h3>
+                  </div>
+                  <div className="card-content">
+                    <p><strong>Preço Mensal:</strong> R$ {plan.monthlyPrice.toFixed(2)}</p>
+                    <p><strong>Benefícios:</strong></p>
+                    <ul style={{ marginLeft: '20px' }}>
+                      {plan.benefits.map((benefit, index) => (
+                        <li key={index}>{benefit}</li>
+                      ))}
+                    </ul>
+                    <p><strong>Status:</strong> {plan.active ? '✅ Ativo' : '❌ Inativo'}</p>
+                    <p><strong>Criado em:</strong> {formatDate(plan.createdAt.split('T')[0])}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{
+                gridColumn: '1 / -1',
+                textAlign: 'center',
+                padding: '40px',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                <p>📋 Nenhum plano mensal criado ainda.</p>
+                <p>Use o botão "Criar Plano Mensal" para adicionar o primeiro plano!</p>
+              </div>
+            )}
           </div>
         </div>
       )}

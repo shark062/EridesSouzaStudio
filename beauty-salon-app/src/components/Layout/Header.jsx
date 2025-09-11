@@ -31,6 +31,18 @@ const Header = () => {
     setFormData({});
   };
 
+  const navigateClientTab = (tab) => {
+    setShowHamburgerMenu(false);
+    window.dispatchEvent(new CustomEvent('tabChange', { 
+      detail: { tab: tab }
+    }));
+  };
+
+  const navigateAdmin = (section) => {
+    setShowHamburgerMenu(false);
+    window.location.hash = `#admin-${section}`;
+  };
+
   const closeModal = () => {
     setShowModal(null);
     setFormData({});
@@ -175,6 +187,35 @@ const Header = () => {
         const updatedBookings = [...bookings, newBooking];
         localStorage.setItem('userBookings', JSON.stringify(updatedBookings));
         alert('Agendamento criado com sucesso!');
+        break;
+
+      case 'createPlan':
+        // Validar campos obrigatórios
+        if (!formData.planName || !formData.monthlyPrice || !formData.benefits) {
+          alert('❌ Por favor, preencha todos os campos obrigatórios!');
+          return;
+        }
+        
+        // Validar preço
+        if (parseFloat(formData.monthlyPrice) <= 0) {
+          alert('❌ O preço deve ser maior que zero!');
+          return;
+        }
+        
+        // Criar novo plano
+        const plans = JSON.parse(localStorage.getItem('plans') || '[]');
+        const newPlan = {
+          id: Date.now().toString(),
+          name: formData.planName,
+          monthlyPrice: parseFloat(formData.monthlyPrice),
+          benefits: formData.benefits.split(',').map(b => b.trim()),
+          includedServiceIds: formData.includedServices ? formData.includedServices.split(',').map(s => parseInt(s.trim())) : [],
+          active: true,
+          createdAt: new Date().toISOString()
+        };
+        const updatedPlans = [...plans, newPlan];
+        localStorage.setItem('plans', JSON.stringify(updatedPlans));
+        alert('✅ Plano mensal criado com sucesso!');
         break;
     }
 
@@ -384,14 +425,7 @@ const Header = () => {
                       </div>
 
                       <button
-                        onClick={() => {
-                          // Disparar evento específico para mudança de aba
-                          const event = new CustomEvent('tabChange', { 
-                            detail: { tab: 'services' }
-                          });
-                          window.dispatchEvent(event);
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateClientTab('services')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -411,13 +445,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const event = new CustomEvent('tabChange', { 
-                            detail: { tab: 'bookings' }
-                          });
-                          window.dispatchEvent(event);
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateClientTab('bookings')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -437,13 +465,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const event = new CustomEvent('tabChange', { 
-                            detail: { tab: 'schedule' }
-                          });
-                          window.dispatchEvent(event);
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateClientTab('schedule')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -463,13 +485,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const event = new CustomEvent('tabChange', { 
-                            detail: { tab: 'history' }
-                          });
-                          window.dispatchEvent(event);
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateClientTab('history')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -489,13 +505,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const event = new CustomEvent('tabChange', { 
-                            detail: { tab: 'loyalty' }
-                          });
-                          window.dispatchEvent(event);
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateClientTab('loyalty')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -575,10 +585,7 @@ const Header = () => {
 
                       {/* Seção Visão Geral */}
                       <button
-                        onClick={() => {
-                          window.location.hash = 'admin-overview';
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateAdmin('overview')}
                         style={{
                           width: '100%',
                           padding: '10px',
@@ -622,10 +629,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          window.location.hash = 'admin-services';
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateAdmin('services')}
                         style={{
                           width: '100%',
                           padding: '10px',
@@ -669,10 +673,7 @@ const Header = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          window.location.hash = 'admin-bookings';
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateAdmin('bookings')}
                         style={{
                           width: '100%',
                           padding: '10px',
@@ -693,11 +694,7 @@ const Header = () => {
 
                       {/* Seção Clientes */}
                       <button
-                        onClick={() => {
-                          console.log('📋 Abrindo gerenciamento de clientes...');
-                          window.location.hash = 'admin-clients';
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateAdmin('clients')}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -718,10 +715,7 @@ const Header = () => {
 
                       {/* Automação */}
                       <button
-                        onClick={() => {
-                          window.location.hash = 'admin-automation';
-                          setShowHamburgerMenu(false);
-                        }}
+                        onClick={() => navigateAdmin('automation')}
                         style={{
                           width: '100%',
                           padding: '10px',
@@ -788,6 +782,50 @@ const Header = () => {
                         onMouseLeave={(e) => e.target.style.background = 'transparent'}
                       >
                         Sincronizar Dados
+                      </button>
+
+                      {/* Criar Planos Mensais */}
+                      <button
+                        onClick={() => navigateAdmin('plans')}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        📋 Planos Mensais
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          openModal('createPlan');
+                          setShowHamburgerMenu(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#FFFFFF',
+                          textAlign: 'left',
+                          fontSize: '0.9rem',
+                          transition: 'background 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 215, 0, 0.1)'}
+                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                      >
+                        ➕ Criar Plano Mensal
                       </button>
                     </>
                   )}
@@ -1147,6 +1185,90 @@ const Header = () => {
                     fontWeight: 'bold'
                   }}>
                     Adicionar
+                  </button>
+                  <button type="button" onClick={closeModal} style={{
+                    padding: '12px 20px',
+                    background: 'transparent',
+                    color: '#000',
+                    border: '1px solid #000',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {showModal === 'createPlan' && (
+              <form onSubmit={handleFormSubmit}>
+                <h2 style={{ marginBottom: '20px' }}>📋 Criar Plano Mensal</h2>
+                <input
+                  type="text"
+                  placeholder="Nome do plano"
+                  value={formData.planName || ''}
+                  onChange={(e) => setFormData({...formData, planName: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Preço mensal (R$)"
+                  value={formData.monthlyPrice || ''}
+                  onChange={(e) => setFormData({...formData, monthlyPrice: e.target.value})}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <textarea
+                  placeholder="Benefícios (separe por vírgula: Desconto 10%, Prioridade agendamento, etc.)"
+                  value={formData.benefits || ''}
+                  onChange={(e) => setFormData({...formData, benefits: e.target.value})}
+                  rows="3"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '15px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="IDs dos serviços inclusos (opcional: 1,2,3)"
+                  value={formData.includedServices || ''}
+                  onChange={(e) => setFormData({...formData, includedServices: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    marginBottom: '20px',
+                    border: '1px solid #000',
+                    borderRadius: '8px'
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" style={{
+                    padding: '12px 20px',
+                    background: '#4CAF50',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}>
+                    Criar Plano
                   </button>
                   <button type="button" onClick={closeModal} style={{
                     padding: '12px 20px',
